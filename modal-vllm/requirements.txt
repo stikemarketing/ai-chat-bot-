@@ -1,0 +1,5 @@
+modal
+fastapi
+uvicorn
+vllm
+huggingface_hub
