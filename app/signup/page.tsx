@@ -1,12 +1,12 @@
 // app/signup/page.tsx
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { saveUser } from "@/lib/user";
 import { saveUserToFirestore } from "@/firebase/users";
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isSaving, setIsSaving] = useState(false);
@@ -114,5 +114,21 @@ export default function SignupPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto w-full max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur">
+            <p className="text-sm text-zinc-400">Loading signup...</p>
+          </div>
+        </div>
+      }
+    >
+      <SignupForm />
+    </Suspense>
   );
 }
