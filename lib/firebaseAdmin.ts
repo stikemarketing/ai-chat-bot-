@@ -1,23 +1,31 @@
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
+function requireEnv(name: string): string {
+  const value = process.env[name]?.trim();
+
+  if (!value) {
+    throw new Error(`Missing env var: ${name}`);
+  }
+
+  return value;
+}
+
 function getFirebaseAdminApp() {
   if (!getApps().length) {
-    const projectId = process.env.FIREBASE_PROJECT_ID;
-    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
-
-    if (!projectId || !clientEmail || !privateKey) {
-      throw new Error(
-        "Missing Firebase Admin env vars: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY."
-      );
-    }
+    const serviceAccountBase64 = requireEnv("FIREBASE_SERVICE_ACCOUNT_JSON_BASE64");
+    const serviceAccountJson = Buffer.from(serviceAccountBase64, "base64").toString("utf8");
+    const serviceAccount = JSON.parse(serviceAccountJson) as {
+      project_id: string;
+      client_email: string;
+      private_key: string;
+    };
 
     initializeApp({
       credential: cert({
-        projectId,
-        clientEmail,
-        privateKey,
+        projectId: serviceAccount.project_id,
+        clientEmail: serviceAccount.client_email,
+        privateKey: serviceAccount.private_key,
       }),
     });
   }
@@ -26,6 +34,5 @@ function getFirebaseAdminApp() {
 }
 
 export function getAdminDb() {
-  const app = getFirebaseAdminApp();
-  return getFirestore(app);
+  return getFirestore(getFirebaseAdminApp());
 }
