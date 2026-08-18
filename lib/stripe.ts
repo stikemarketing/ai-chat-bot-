@@ -1,4 +1,6 @@
+// lib/stripe.ts
 import Stripe from "stripe";
+import type { AppPlan } from "@/lib/plans";
 
 let stripeClient: Stripe | null = null;
 
@@ -32,6 +34,40 @@ export function getStripePriceIdPro() {
   }
 
   return priceId;
+}
+
+export function getStripePriceIdUnlimited() {
+  const priceId = process.env.STRIPE_PRICE_ID_UNLIMITED?.trim();
+
+  if (!priceId) {
+    throw new Error("Missing STRIPE_PRICE_ID_UNLIMITED in environment.");
+  }
+
+  return priceId;
+}
+
+export function getStripePriceIdNormalImageCredit() {
+  const priceId = process.env.STRIPE_PRICE_ID_NORMAL_IMAGE_CREDIT?.trim();
+
+  if (!priceId) {
+    throw new Error(
+      "Missing STRIPE_PRICE_ID_NORMAL_IMAGE_CREDIT in environment."
+    );
+  }
+
+  return priceId;
+}
+
+export function getStripePriceIdForPlan(plan: AppPlan) {
+  if (plan === "pro") {
+    return getStripePriceIdPro();
+  }
+
+  if (plan === "unlimited") {
+    return getStripePriceIdUnlimited();
+  }
+
+  throw new Error(`Stripe checkout is not available for plan: ${plan}`);
 }
 
 export function getStripeWebhookSecret() {

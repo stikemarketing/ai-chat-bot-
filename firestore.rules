@@ -1,0 +1,158 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAllowedCharacter(characterId) {
+      return characterId in ["luna", "ivy", "sienna"];
+    }
+
+    function isSafeUserCreate(userId) {
+      return request.resource.data.id == userId
+        && request.resource.data.plan == "free"
+        && request.resource.data.trialActive is bool
+        && request.resource.data.name is string
+        && request.resource.data.email is string
+        && request.resource.data.timezone is string
+        && isAllowedCharacter(request.resource.data.selectedCharacter)
+        && request.resource.data.keys().hasOnly([
+          "id",
+          "name",
+          "email",
+          "selectedCharacter",
+          "timezone",
+          "plan",
+          "trialActive",
+          "createdAt",
+          "updatedAt"
+        ]);
+    }
+
+    function isSafeUserUpdate(userId) {
+      return request.resource.data.id == userId
+        && request.resource.data.plan == resource.data.plan
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          "id",
+          "name",
+          "email",
+          "selectedCharacter",
+          "timezone",
+          "trialActive",
+          "createdAt",
+          "updatedAt",
+          "lastChatOpenedAt",
+          "lastChatActivityAt",
+          "pushNotificationsEnabled",
+          "lastPushTokenSavedAt",
+          "goodMorningMessagesEnabled",
+          "goodMorningMessageTime",
+          "goodMorningTimezone",
+          "goodMorningCharacterId",
+          "goodMorningPreferenceUpdatedAt"
+        ])
+        && (!("name" in request.resource.data) || request.resource.data.name is string)
+        && (!("email" in request.resource.data) || request.resource.data.email is string)
+        && (!("timezone" in request.resource.data) || request.resource.data.timezone is string)
+        && (!("trialActive" in request.resource.data) || request.resource.data.trialActive is bool)
+        && (!("selectedCharacter" in request.resource.data) || isAllowedCharacter(request.resource.data.selectedCharacter))
+        && (!("goodMorningMessagesEnabled" in request.resource.data) || request.resource.data.goodMorningMessagesEnabled is bool)
+        && (!("goodMorningMessageTime" in request.resource.data) || request.resource.data.goodMorningMessageTime is string)
+        && (!("goodMorningTimezone" in request.resource.data) || request.resource.data.goodMorningTimezone is string)
+        && (!("goodMorningCharacterId" in request.resource.data) || isAllowedCharacter(request.resource.data.goodMorningCharacterId));
+    }
+
+    function isSafeConversationWrite(userId) {
+      return request.resource.data.userId == userId
+        && isAllowedCharacter(request.resource.data.characterId)
+        && request.resource.data.characterName is string
+        && request.resource.data.keys().hasOnly([
+          "userId",
+          "characterId",
+          "characterName",
+          "createdAt",
+          "updatedAt"
+        ]);
+    }
+
+    function isSafeMessageCreate() {
+      return request.resource.data.role in ["user", "assistant"]
+        && (!("type" in request.resource.data) || request.resource.data.type == "text")
+        && request.resource.data.text is string
+        && request.resource.data.keys().hasOnly([
+          "role",
+          "type",
+          "text",
+          "createdAt"
+        ]);
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isSafeUserCreate(userId);
+      allow update: if isOwner(userId) && isSafeUserUpdate(userId);
+      allow delete: if false;
+
+      match /imageUsage/{usageId} {
+        allow read: if isOwner(userId);
+        allow write: if false;
+      }
+
+      match /dailyImageProfiles/{profileId} {
+        allow read: if isOwner(userId);
+        allow write: if false;
+      }
+
+      match /pushTokens/{tokenId} {
+        allow read: if isOwner(userId);
+        allow write: if false;
+      }
+    }
+
+    match /conversations/{userId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isSafeConversationWrite(userId);
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        allow read: if isOwner(userId);
+        allow create: if false;
+        allow update, delete: if false;
+      }
+
+      match /characters/{characterId} {
+        allow read: if isOwner(userId) && isAllowedCharacter(characterId);
+
+        allow create: if isOwner(userId)
+          && isAllowedCharacter(characterId)
+          && request.resource.data.userId == userId
+          && request.resource.data.characterId == characterId
+          && request.resource.data.characterName is string;
+
+        allow update: if isOwner(userId)
+          && isAllowedCharacter(characterId)
+          && request.resource.data.userId == userId
+          && request.resource.data.characterId == characterId
+          && request.resource.data.characterName is string;
+
+        allow delete: if false;
+
+        match /messages/{messageId} {
+          allow read: if isOwner(userId);
+          allow create: if isOwner(userId) && isSafeMessageCreate();
+          allow update, delete: if false;
+        }
+      }
+    }
+
+    match /stripeWebhookLogs/{logId} {
+      allow read, write: if false;
+    }
+  }
+}

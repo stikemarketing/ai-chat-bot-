@@ -3,28 +3,35 @@ import Link from "next/link";
 
 export default function TermsPage() {
   return (
-    <main className="min-h-screen bg-black text-white">
-      <div className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[#f7eeee] px-4 py-6 text-[#111111] sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+      <div className="mx-auto w-full max-w-4xl">
         <div className="mb-8">
-          <Link href="/" className="text-sm text-zinc-400 hover:text-white">
+          <Link
+            href="/"
+            className="text-sm font-medium text-black/50 transition hover:text-[#c1123f]"
+          >
             ← Back to home
           </Link>
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-          <p className="text-sm uppercase tracking-[0.2em] text-zinc-500">
+        <section className="rounded-[2rem] border border-[#c1123f]/10 bg-white/72 p-6 shadow-[0_20px_60px_rgba(111,0,23,0.05)] sm:p-8 lg:p-10">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-[#c1123f] sm:text-[13px]">
             Terms of Service
           </p>
 
-          <h1 className="mt-3 text-4xl font-bold">Terms of Service</h1>
+          <h1 className="mt-3 text-4xl font-semibold tracking-[-0.04em] text-black sm:text-5xl">
+            Terms of Service
+          </h1>
 
-          <p className="mt-4 text-sm leading-7 text-zinc-300">
+          <p className="mt-4 text-base leading-8 text-black/65">
             Effective date: 4 May 2026
           </p>
 
-          <div className="mt-8 space-y-8 text-sm leading-7 text-zinc-300">
+          <div className="mt-8 space-y-8 text-base leading-8 text-black/68">
             <section>
-              <h2 className="text-lg font-semibold text-white">1. Overview</h2>
+              <h2 className="text-xl font-semibold tracking-tight text-black">
+                1. Overview
+              </h2>
               <p className="mt-2">
                 These Terms of Service govern access to and use of AI Companion.
                 By using the app, you agree to these terms.
@@ -32,7 +39,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-xl font-semibold tracking-tight text-black">
                 2. Service description
               </h2>
               <p className="mt-2">
@@ -43,7 +50,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-xl font-semibold tracking-tight text-black">
                 3. Accounts
               </h2>
               <p className="mt-2">
@@ -54,32 +61,35 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-xl font-semibold tracking-tight text-black">
                 4. Paid subscriptions
               </h2>
               <p className="mt-2">
-                Some features may require a paid subscription. Pricing,
-                billing terms, and renewal behavior may be shown at checkout.
+                Some features may require a paid subscription. Pricing, billing
+                terms, and renewal behaviour may be shown at checkout.
                 Subscription payments are processed by third-party payment
                 providers such as Stripe.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-xl font-semibold tracking-tight text-black">
                 5. Acceptable use
               </h2>
               <div className="mt-2 space-y-2">
                 <p>You agree not to:</p>
                 <p>• misuse, disrupt, reverse engineer, or abuse the service</p>
-                <p>• use the service for unlawful, harmful, or fraudulent activity</p>
-                <p>• attempt unauthorized access to accounts, systems, or data</p>
+                <p>
+                  • use the service for unlawful, harmful, or fraudulent
+                  activity
+                </p>
+                <p>• attempt unauthorised access to accounts, systems, or data</p>
                 <p>• use the app in violation of applicable laws or regulations</p>
               </div>
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-xl font-semibold tracking-tight text-black">
                 6. AI-generated content
               </h2>
               <p className="mt-2">
@@ -90,7 +100,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-xl font-semibold tracking-tight text-black">
                 7. Availability
               </h2>
               <p className="mt-2">
@@ -100,30 +110,28 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-xl font-semibold tracking-tight text-black">
                 8. Limitation of liability
               </h2>
               <p className="mt-2">
                 To the maximum extent permitted by law, AI Companion is provided
                 on an “as is” and “as available” basis without warranties of any
-                kind. We are not liable for indirect, incidental, or consequential
-                losses arising from use of the service.
+                kind. We are not liable for indirect, incidental, or
+                consequential losses arising from use of the service.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-xl font-semibold tracking-tight text-black">
                 9. Contact
               </h2>
-              <p className="mt-2">
-                For support or legal questions, contact:
-              </p>
-              <p className="mt-2 font-semibold text-white break-all">
+              <p className="mt-2">For support or legal questions, contact:</p>
+              <p className="mt-2 break-all font-semibold text-[#c1123f]">
                 digitalstrikemarketing@outlook.com
               </p>
             </section>
           </div>
-        </div>
+        </section>
       </div>
     </main>
   );

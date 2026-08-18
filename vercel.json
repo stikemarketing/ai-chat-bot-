@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/cron/hourly-companion-message",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/good-morning-message",
+      "schedule": "*/30 * * * *"
+    }
+  ]
+}

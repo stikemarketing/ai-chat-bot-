@@ -1,5 +1,6 @@
 // lib/fakePlan.ts
-import type { AppPlan } from "@/lib/plans";
+
+import { normalizePlan, type AppPlan } from "@/lib/plans";
 
 const FAKE_PLAN_STORAGE_KEY = "ai_companion_fake_plan";
 
@@ -10,7 +11,7 @@ export function getFakePlan(): AppPlan | null {
 
   const value = window.localStorage.getItem(FAKE_PLAN_STORAGE_KEY);
 
-  if (value === "pro" || value === "free") {
+  if (value === "free" || value === "pro" || value === "unlimited") {
     return value;
   }
 
@@ -22,7 +23,7 @@ export function setFakePlan(plan: AppPlan) {
     return;
   }
 
-  window.localStorage.setItem(FAKE_PLAN_STORAGE_KEY, plan);
+  window.localStorage.setItem(FAKE_PLAN_STORAGE_KEY, normalizePlan(plan));
 }
 
 export function clearFakePlan() {
@@ -40,5 +41,5 @@ export function getEffectivePlan(userPlan: string | null | undefined): AppPlan {
     return fakePlan;
   }
 
-  return userPlan === "pro" ? "pro" : "free";
+  return normalizePlan(userPlan);
 }

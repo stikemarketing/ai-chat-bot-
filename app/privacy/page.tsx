@@ -3,28 +3,35 @@ import Link from "next/link";
 
 export default function PrivacyPage() {
   return (
-    <main className="min-h-screen bg-black text-white">
-      <div className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[#f7eeee] px-4 py-6 text-[#111111] sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+      <div className="mx-auto w-full max-w-4xl">
         <div className="mb-8">
-          <Link href="/" className="text-sm text-zinc-400 hover:text-white">
+          <Link
+            href="/"
+            className="text-sm font-medium text-black/50 transition hover:text-[#c1123f]"
+          >
             ← Back to home
           </Link>
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-          <p className="text-sm uppercase tracking-[0.2em] text-zinc-500">
+        <section className="rounded-[2rem] border border-[#c1123f]/10 bg-white/72 p-6 shadow-[0_20px_60px_rgba(111,0,23,0.05)] sm:p-8 lg:p-10">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-[#c1123f] sm:text-[13px]">
             Privacy Policy
           </p>
 
-          <h1 className="mt-3 text-4xl font-bold">Privacy Policy</h1>
+          <h1 className="mt-3 text-4xl font-semibold tracking-[-0.04em] text-black sm:text-5xl">
+            Privacy Policy
+          </h1>
 
-          <p className="mt-4 text-sm leading-7 text-zinc-300">
+          <p className="mt-4 text-base leading-8 text-black/65">
             Effective date: 4 May 2026
           </p>
 
-          <div className="mt-8 space-y-8 text-sm leading-7 text-zinc-300">
+          <div className="mt-8 space-y-8 text-base leading-8 text-black/68">
             <section>
-              <h2 className="text-lg font-semibold text-white">1. Overview</h2>
+              <h2 className="text-xl font-semibold tracking-tight text-black">
+                1. Overview
+              </h2>
               <p className="mt-2">
                 AI Companion collects and processes limited user information to
                 provide account access, chat functionality, subscription access,
@@ -33,7 +40,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-xl font-semibold tracking-tight text-black">
                 2. Information we collect
               </h2>
               <div className="mt-2 space-y-2">
@@ -42,12 +49,15 @@ export default function PrivacyPage() {
                 <p>• chat content submitted through the app</p>
                 <p>• saved message history linked to your account</p>
                 <p>• subscription and billing status information</p>
-                <p>• basic technical and usage information needed to operate the service</p>
+                <p>
+                  • basic technical and usage information needed to operate the
+                  service
+                </p>
               </div>
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-xl font-semibold tracking-tight text-black">
                 3. How we use information
               </h2>
               <div className="mt-2 space-y-2">
@@ -61,7 +71,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-xl font-semibold tracking-tight text-black">
                 4. Payments
               </h2>
               <p className="mt-2">
@@ -72,19 +82,19 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-xl font-semibold tracking-tight text-black">
                 5. Data storage
               </h2>
               <p className="mt-2">
                 User account information, chat history, and plan data may be
-                stored in third-party infrastructure used to operate the app.
-                We take reasonable steps to protect stored information, but no
+                stored in third-party infrastructure used to operate the app. We
+                take reasonable steps to protect stored information, but no
                 online service can guarantee absolute security.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-xl font-semibold tracking-tight text-black">
                 6. Sharing
               </h2>
               <p className="mt-2">
@@ -96,7 +106,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-xl font-semibold tracking-tight text-black">
                 7. Your choices
               </h2>
               <p className="mt-2">
@@ -107,18 +117,16 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-xl font-semibold tracking-tight text-black">
                 8. Contact
               </h2>
-              <p className="mt-2">
-                For privacy questions, contact:
-              </p>
-              <p className="mt-2 font-semibold text-white break-all">
+              <p className="mt-2">For privacy questions, contact:</p>
+              <p className="mt-2 break-all font-semibold text-[#c1123f]">
                 digitalstrikemarketing@outlook.com
               </p>
             </section>
           </div>
-        </div>
+        </section>
       </div>
     </main>
   );

@@ -1,0 +1,297 @@
+import Link from "next/link";
+import { PLAN_DEFINITIONS, type AppPlan } from "@/lib/plans";
+
+const steps = [
+  {
+    title: "Choose your companion",
+    text: "Start by browsing Luna, Ivy, and Sienna. Each one has her own personality, tone, and style.",
+  },
+  {
+    title: "Create your account",
+    text: "Sign up with your name, email, and password. You’ll verify your email so your account is secure.",
+  },
+  {
+    title: "Start chatting",
+    text: "Once you choose your companion, your private chat opens and the conversation can build naturally over time.",
+  },
+  {
+    title: "Upgrade when you want more",
+    text: "Start free, then move to Pro or Unlimited when you want more messages, image access, and the fuller companion experience.",
+  },
+] as const;
+
+const featureRows: {
+  label: string;
+  free: string;
+  pro: string;
+  unlimited: string;
+}[] = [
+  {
+    label: "Text messages",
+    free: "15 per day",
+    pro: "Unlimited",
+    unlimited: "Unlimited",
+  },
+  {
+    label: "Everyday image messages",
+    free: "Not included",
+    pro: "10 per day",
+    unlimited: "Unlimited",
+  },
+  {
+    label: "Spicy image messages",
+    free: "Not included",
+    pro: "3 per day",
+    unlimited: "Unlimited",
+  },
+  {
+    label: "Image reset",
+    free: "Not included",
+    pro: "Daily reset",
+    unlimited: "No daily limit",
+  },
+  {
+    label: "Extra image tokens",
+    free: "Not included",
+    pro: "Available for everyday images",
+    unlimited: "Not needed",
+  },
+];
+
+const planOrder: AppPlan[] = ["free", "pro", "unlimited"];
+
+function getPlanIntro(plan: AppPlan) {
+  if (plan === "free") {
+    return "A simple way to try the experience and see if the vibe feels right.";
+  }
+
+  if (plan === "pro") {
+    return "Best for regular chatting, everyday selfies, and a limited amount of spicy image access.";
+  }
+
+  return "The full companion experience with unlimited messages and unlimited image access.";
+}
+
+export default function AboutPage() {
+  return (
+    <main className="min-h-screen bg-[#f7eeee] px-4 py-6 text-[#111111] sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+      <div className="mx-auto max-w-7xl">
+        <section className="rounded-[2rem] border border-[#c1123f]/10 bg-white/72 p-5 shadow-[0_20px_60px_rgba(111,0,23,0.05)] sm:p-8 lg:p-10">
+          <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+            <div>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-[#c1123f] sm:text-[13px]">
+                About the app
+              </p>
+
+              <h1 className="mt-3 max-w-3xl text-4xl font-semibold leading-[0.98] tracking-[-0.04em] text-black sm:text-5xl lg:text-6xl">
+                A private AI companion that feels warm, playful, and personal
+              </h1>
+
+              <p className="mt-5 max-w-2xl text-base leading-8 text-black/65 sm:text-lg">
+                AI Companion is built for people who want a private, easy-going
+                chat experience with beautifully designed companions. Choose a
+                character, start a conversation, and come back whenever you want
+                company, chemistry, or a little playful attention.
+              </p>
+
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href="/characters"
+                  className="inline-flex min-h-14 items-center justify-center rounded-full bg-[#b10f38] px-7 py-3 font-semibold transition hover:bg-[#970d31]"
+                >
+                  <span className="text-base text-white">Choose companion</span>
+                </Link>
+
+                <Link
+                  href="/upgrade"
+                  className="inline-flex min-h-14 items-center justify-center rounded-full border border-[#c1123f]/14 bg-white px-7 py-3 font-semibold transition hover:border-[#c1123f]/25 hover:bg-[#fff7f8]"
+                >
+                  <span className="text-base text-black">View plans</span>
+                </Link>
+              </div>
+            </div>
+
+            <div className="rounded-[2rem] border border-[#c1123f]/8 bg-[#fff8f8] p-5 sm:p-6">
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#c1123f]">
+                The quick version
+              </p>
+
+              <div className="mt-5 space-y-3">
+                {[
+                  "Pick the companion that fits your mood.",
+                  "Chat in a private, mobile-friendly space.",
+                  "Start free and upgrade only when you want more.",
+                  "Pro unlocks regular image access.",
+                  "Unlimited gives the full image experience.",
+                ].map((item) => (
+                  <div
+                    key={item}
+                    className="rounded-[1.35rem] bg-white px-4 py-3 text-sm leading-6 text-black/68"
+                  >
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-8">
+          <div className="max-w-3xl">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-[#c1123f] sm:text-[13px]">
+              How it works
+            </p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-black sm:text-4xl">
+              Simple, private, and easy to start
+            </h2>
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {steps.map((step, index) => (
+              <div
+                key={step.title}
+                className="rounded-[1.8rem] border border-[#c1123f]/8 bg-white/78 p-5 shadow-[0_10px_30px_rgba(0,0,0,0.03)]"
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#ffe3ea] text-sm font-bold text-[#b10f38]">
+                  {index + 1}
+                </div>
+                <h3 className="mt-4 text-xl font-semibold tracking-tight text-black">
+                  {step.title}
+                </h3>
+                <p className="mt-2 text-sm leading-7 text-black/62">
+                  {step.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="rounded-[2rem] border border-[#c1123f]/8 bg-white/72 p-5 sm:p-8 lg:p-9">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-[#c1123f] sm:text-[13px]">
+                Subscription guide
+              </p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-black sm:text-4xl">
+                What you get with each plan
+              </h2>
+              <p className="mt-3 text-base leading-8 text-black/62">
+                Start with Free, use Pro for regular access, or choose
+                Unlimited when you want the full experience without daily image
+                limits.
+              </p>
+            </div>
+
+            <Link
+              href="/upgrade"
+              className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#b10f38] px-6 py-3 font-semibold transition hover:bg-[#970d31]"
+            >
+              <span className="text-sm text-white">Upgrade options</span>
+            </Link>
+          </div>
+
+          <div className="mt-8 grid gap-4 lg:grid-cols-3">
+            {planOrder.map((plan) => {
+              const definition = PLAN_DEFINITIONS[plan];
+
+              return (
+                <article
+                  key={definition.id}
+                  className={`rounded-[1.8rem] border p-6 ${
+                    definition.highlighted
+                      ? "border-[#c1123f]/20 bg-[#fff1f4]"
+                      : "border-[#c1123f]/8 bg-white"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-[#c1123f]">
+                        {definition.name}
+                      </p>
+                      <p className="mt-2 text-4xl font-semibold tracking-tight text-black">
+                        {definition.priceLabel}
+                      </p>
+                    </div>
+
+                    {definition.highlighted ? (
+                      <span className="rounded-full bg-[#b10f38] px-3 py-1.5 text-xs font-semibold text-white">
+                        Popular
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <p className="mt-4 text-sm leading-7 text-black/62">
+                    {getPlanIntro(plan)}
+                  </p>
+
+                  <div className="mt-5 space-y-2">
+                    {definition.features.map((feature) => (
+                      <p
+                        key={feature}
+                        className="rounded-[1rem] bg-white/70 px-3 py-2 text-sm leading-6 text-black/62"
+                      >
+                        • {feature}
+                      </p>
+                    ))}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          <div className="mt-8 overflow-hidden rounded-[1.8rem] border border-[#c1123f]/8 bg-white">
+            <div className="grid grid-cols-[1.1fr_0.9fr_0.9fr_0.9fr] bg-[#fff4f6] text-xs font-bold uppercase tracking-[0.16em] text-[#8f0d2f]">
+              <div className="px-4 py-4">Feature</div>
+              <div className="px-4 py-4">Free</div>
+              <div className="px-4 py-4">Pro</div>
+              <div className="px-4 py-4">Unlimited</div>
+            </div>
+
+            {featureRows.map((row) => (
+              <div
+                key={row.label}
+                className="grid grid-cols-[1.1fr_0.9fr_0.9fr_0.9fr] border-t border-[#c1123f]/8 text-sm leading-6 text-black/68"
+              >
+                <div className="px-4 py-4 font-semibold text-black">
+                  {row.label}
+                </div>
+                <div className="px-4 py-4">{row.free}</div>
+                <div className="px-4 py-4">{row.pro}</div>
+                <div className="px-4 py-4">{row.unlimited}</div>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-4 text-xs leading-6 text-black/45">
+            Image limits reset daily based on the user’s timezone. Subscription
+            details can be adjusted later before launch.
+          </p>
+        </section>
+
+        <section className="py-8">
+          <div className="rounded-[2rem] bg-black px-5 py-8 text-white shadow-[0_25px_70px_rgba(0,0,0,0.18)] sm:px-8 lg:px-9 lg:py-10">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-[#ff8fa8] sm:text-[13px]">
+              Ready when you are
+            </p>
+            <h2 className="mt-3 max-w-4xl text-3xl font-semibold tracking-[-0.03em] text-white sm:text-4xl lg:text-5xl">
+              Choose the companion that fits your energy
+            </h2>
+            <p className="mt-4 max-w-3xl text-lg leading-8 text-white/72">
+              Start with a free account, explore the personality that feels
+              right, and upgrade later when you want more access.
+            </p>
+
+            <div className="mt-7">
+              <Link
+                href="/characters"
+                className="inline-flex min-h-14 items-center justify-center rounded-full bg-white px-7 py-3 font-semibold transition hover:bg-white/90"
+              >
+                <span className="text-base text-black">Browse companions</span>
+              </Link>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}

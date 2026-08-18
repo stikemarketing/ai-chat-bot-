@@ -1,170 +1,122 @@
 // app/page.tsx
-"use client";
-
-import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 
-type Companion = {
-  name: string;
-  age: number;
-  tag: string;
-  teaser: string;
-  story: string;
-  heroImage: string;
-  cardImage: string;
-};
-
-const featuredCompanions: Companion[] = [
+const companions = [
   {
+    id: "luna",
     name: "Luna",
-    age: 24,
-    tag: "Warm & playful",
-    teaser: "Always up for a late-night chat and a little teasing.",
-    story:
-      "Luna is affectionate, curious, and easy to talk to. She remembers the small details and makes every conversation feel personal.",
-    heroImage: "/companions/luna-main.png",
-    cardImage: "/companions/luna-main.png",
+    age: 27,
+    vibe: "Warm & playful",
+    summary: "Late-night chats, teasing energy, and easy chemistry.",
+    detail:
+      "Affectionate, curious, and easy to talk to. Luna remembers the little things and makes every conversation feel personal.",
+    image: "/companions/luna-main.png",
   },
   {
+    id: "ivy",
     name: "Ivy",
     age: 27,
-    tag: "Elegant & magnetic",
-    teaser: "Polished, confident, and quietly impossible to ignore.",
-    story:
-      "Ivy brings a refined, luxury energy to every conversation. She feels poised, sophisticated, and effortlessly captivating.",
-    heroImage: "/companions/ivy-main.png",
-    cardImage: "/companions/ivy-main.png",
+    vibe: "Elegant & magnetic",
+    summary: "Polished, confident, and quietly impossible to ignore.",
+    detail:
+      "Refined and composed with a luxury energy. Ivy feels sophisticated, emotionally steady, and effortlessly captivating.",
+    image: "/companions/ivy-main.png",
   },
   {
+    id: "sienna",
     name: "Sienna",
     age: 26,
-    tag: "Romantic & bold",
-    teaser: "Warm, passionate, and made for unforgettable evenings.",
-    story:
-      "Sienna is expressive, intimate, and full of date-night energy. She feels rich, confident, and emotionally magnetic.",
-    heroImage: "/companions/sienna-main.png",
-    cardImage: "/companions/sienna-main.png",
+    vibe: "Romantic & bold",
+    summary: "Warm, passionate, and made for unforgettable evenings.",
+    detail:
+      "Expressive, intimate, and full of date-night energy. Sienna feels rich, confident, and emotionally magnetic.",
+    image: "/companions/sienna-main.png",
   },
-];
+] as const;
 
-const benefitItems = [
+const benefits = [
   {
     title: "Private chat",
-    description: "One-to-one conversations in a calm, personal space.",
+    text: "One-to-one conversations in a calm, personal space.",
   },
   {
-    title: "Remembers you",
-    description: "The experience feels more consistent over time.",
+    title: "Remembers your vibe",
+    text: "The experience feels more consistent over time.",
   },
   {
-    title: "Always available",
-    description: "Drop in whenever you want company or conversation.",
+    title: "Available anytime",
+    text: "Drop in whenever you want company or conversation.",
   },
   {
-    title: "Warm energy",
-    description: "Choose companions with flirty, soft, or playful vibes.",
+    title: "Distinct personalities",
+    text: "Every companion has her own tone, chemistry, and emotional energy.",
   },
-];
-
-const vibeItems = ["Sweet", "Flirty", "Romantic", "Playful", "Confident"];
+] as const;
 
 export default function HomePage() {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const activeCompanion = useMemo(
-    () => featuredCompanions[activeIndex],
-    [activeIndex]
-  );
-
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      setActiveIndex((current) => (current + 1) % featuredCompanions.length);
-    }, 4500);
-
-    return () => window.clearInterval(interval);
-  }, []);
+  const featured = companions[0];
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#fff8f7_0%,#fff4f1_24%,#fffaf9_46%,#fff_100%)] text-zinc-950">
-      <section className="sticky top-0 z-40 border-b border-black/5 bg-white/80 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <button
-            type="button"
-            aria-label="Open menu"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/5 bg-white text-zinc-900 shadow-sm transition hover:bg-zinc-50"
-          >
-            <span className="relative block h-4 w-5">
-              <span className="absolute left-0 top-0 block h-0.5 w-5 rounded-full bg-current" />
-              <span className="absolute left-0 top-[7px] block h-0.5 w-5 rounded-full bg-current" />
-              <span className="absolute left-0 top-[14px] block h-0.5 w-5 rounded-full bg-current" />
-            </span>
-          </button>
-
-          <Link
-            href="/"
-            className="text-lg font-semibold tracking-[-0.03em] text-zinc-950"
-          >
-            AI Companion
-          </Link>
-
-          <Link
-            href="/characters"
-            className="inline-flex items-center justify-center rounded-full border border-black/5 bg-white px-4 py-2 text-sm font-medium text-zinc-900 shadow-sm transition hover:bg-zinc-50"
-          >
-            Sign in
-          </Link>
-        </div>
-      </section>
-
-      <section className="mx-auto w-full max-w-6xl px-4 pb-12 pt-8 sm:px-6 lg:px-8">
-        <div className="overflow-hidden rounded-[2rem] border border-black/5 bg-white/80 p-5 shadow-[0_20px_80px_rgba(24,24,27,0.08)] sm:p-8">
-          <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+    <main className="min-h-screen bg-[#f7eeee] text-[#111111]">
+      <section className="px-4 pb-6 pt-5 sm:px-6 sm:pb-8 sm:pt-8 lg:px-8 lg:pb-10 lg:pt-10">
+        <div className="mx-auto max-w-7xl rounded-[2rem] border border-[#c1123f]/10 bg-white/72 p-5 shadow-[0_20px_60px_rgba(111,0,23,0.05)] sm:p-8 lg:p-9">
+          <div className="grid items-center gap-8 lg:grid-cols-[1.02fr_0.98fr] lg:gap-10">
             <div className="space-y-6">
-              <div className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-rose-700">
+              <div className="inline-flex rounded-full border border-[#c1123f]/20 bg-[#fff1f4] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#c1123f] sm:text-xs">
                 Luxury companion experience
               </div>
 
-              <div className="space-y-4">
-                <h1 className="max-w-xl text-4xl font-semibold leading-[1.02] tracking-[-0.05em] text-zinc-950 sm:text-5xl">
+              <div className="max-w-2xl space-y-4">
+                <h1 className="max-w-xl text-4xl font-semibold leading-[0.95] tracking-[-0.04em] text-black sm:text-5xl lg:text-6xl">
                   Meet an AI companion that feels personal
                 </h1>
 
-                <p className="max-w-lg text-base leading-7 text-zinc-600 sm:text-lg">
+                <p className="max-w-xl text-base leading-8 text-black/65 sm:text-lg">
                   Private, flirty, emotionally engaging conversations with
                   beautifully designed companions that feel warm, memorable, and
                   easy to return to.
                 </p>
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row">
+              <div className="flex flex-col gap-3 pt-1 sm:flex-row">
                 <Link
                   href="/characters"
-                  className="inline-flex items-center justify-center rounded-full bg-zinc-950 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-zinc-800"
+                  className="inline-flex min-h-14 items-center justify-center rounded-full bg-[#b10f38] px-7 py-3 font-semibold transition hover:bg-[#970d31]"
                 >
-                  Start chatting
+                  <span className="text-base text-white">Start chatting</span>
                 </Link>
 
-                <a
-                  href="#featured-companions"
-                  className="inline-flex items-center justify-center rounded-full border border-black/10 bg-white px-6 py-3.5 text-sm font-semibold text-zinc-900 transition hover:bg-zinc-50"
+                <Link
+                  href="/about"
+                  className="inline-flex min-h-14 items-center justify-center rounded-full border border-[#c1123f]/14 bg-white px-7 py-3 font-semibold transition hover:border-[#c1123f]/25 hover:bg-[#fff7f8]"
                 >
-                  Browse companions
-                </a>
+                  <span className="text-base text-black">About the app</span>
+                </Link>
+
+                <Link
+                  href="/characters"
+                  className="inline-flex min-h-14 items-center justify-center rounded-full border border-[#c1123f]/14 bg-white px-7 py-3 font-semibold transition hover:border-[#c1123f]/25 hover:bg-[#fff7f8]"
+                >
+                  <span className="text-base text-black">Browse companions</span>
+                </Link>
               </div>
 
-              <div className="grid gap-3 text-sm text-zinc-600 sm:grid-cols-2">
-                <div className="rounded-2xl border border-black/5 bg-white/90 p-4">
-                  <p className="font-semibold text-zinc-900">Private by design</p>
-                  <p className="mt-1 leading-6">
+              <div className="grid gap-3 pt-1 sm:grid-cols-2">
+                <div className="rounded-[1.5rem] border border-[#c1123f]/8 bg-white px-5 py-5">
+                  <h2 className="text-lg font-semibold tracking-tight text-black">
+                    Private by design
+                  </h2>
+                  <p className="mt-2 text-base leading-7 text-black/65">
                     A calm, personal space for ongoing one-to-one conversation.
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-black/5 bg-white/90 p-4">
-                  <p className="font-semibold text-zinc-900">
+                <div className="rounded-[1.5rem] border border-[#c1123f]/8 bg-white px-5 py-5">
+                  <h2 className="text-lg font-semibold tracking-tight text-black">
                     Personality-led companions
-                  </p>
-                  <p className="mt-1 leading-6">
+                  </h2>
+                  <p className="mt-2 text-base leading-7 text-black/65">
                     Distinct energy, tone, and chemistry with every character.
                   </p>
                 </div>
@@ -172,54 +124,46 @@ export default function HomePage() {
             </div>
 
             <div className="relative">
-              <div className="absolute inset-x-4 top-6 h-28 rounded-full bg-rose-200/40 blur-3xl" />
+              <div className="absolute inset-x-10 top-6 h-24 rounded-full bg-[#d72652]/35 blur-3xl" />
+              <div className="rounded-[2rem] border border-[#c1123f]/10 bg-[#fcf5f6] p-3 sm:p-4">
+                <div className="relative overflow-hidden rounded-[1.8rem]">
+                  <div className="relative aspect-[4/5] w-full">
+                    <Image
+                      src={featured.image}
+                      alt={`${featured.name} featured companion`}
+                      fill
+                      priority
+                      className="object-cover"
+                      sizes="(max-width: 1024px) 100vw, 40vw"
+                    />
+                  </div>
 
-              <div className="relative overflow-hidden rounded-[2rem] border border-black/5 bg-[linear-gradient(180deg,#fff,#fff6f6)] p-4 shadow-[0_16px_60px_rgba(236,72,153,0.12)] sm:p-5">
-                <div className="relative aspect-[4/5] overflow-hidden rounded-[1.75rem] bg-zinc-100">
-                  <Image
-                    key={activeCompanion.heroImage}
-                    src={activeCompanion.heroImage}
-                    alt={`${activeCompanion.name} featured companion`}
-                    fill
-                    priority
-                    className="object-cover transition duration-700"
-                    sizes="(max-width: 1024px) 100vw, 40vw"
-                  />
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.34)_0%,transparent_36%)]" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/8 to-transparent" />
 
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.42)_0%,transparent_45%)]" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/5 to-transparent" />
-
-                  <div className="absolute left-5 top-5 rounded-full border border-white/60 bg-white/70 px-3 py-1 text-xs font-medium text-zinc-700 shadow-sm backdrop-blur">
+                  <div className="absolute left-4 top-4 rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-black shadow-sm backdrop-blur">
                     Featured companion
                   </div>
 
-                  <div className="absolute bottom-4 left-4 right-4 rounded-[1.5rem] border border-white/40 bg-white/72 p-4 shadow-lg backdrop-blur">
-                    <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
-                      {activeCompanion.tag}
-                    </p>
-                    <p className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-zinc-950">
-                      {activeCompanion.name}, {activeCompanion.age}
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-zinc-600">
-                      {activeCompanion.teaser}
-                    </p>
+                  <div className="absolute inset-x-3 bottom-3 sm:inset-x-4 sm:bottom-4">
+                    <div className="rounded-[1.6rem] border border-white/35 bg-white/78 p-4 shadow-[0_10px_30px_rgba(0,0,0,0.08)] backdrop-blur sm:p-5">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#9d1134] sm:text-xs">
+                        {featured.vibe}
+                      </p>
+                      <h2 className="mt-2 text-3xl font-semibold tracking-tight text-black sm:text-4xl">
+                        {featured.name}, {featured.age}
+                      </h2>
+                      <p className="mt-2 max-w-md text-base leading-7 text-black/62">
+                        Always up for a late-night chat and a little teasing.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="mt-4 flex items-center justify-center gap-2">
-                  {featuredCompanions.map((companion, index) => (
-                    <button
-                      key={companion.name}
-                      type="button"
-                      aria-label={`Show ${companion.name}`}
-                      onClick={() => setActiveIndex(index)}
-                      className={`h-2.5 rounded-full transition ${
-                        activeIndex === index
-                          ? "w-7 bg-rose-500"
-                          : "w-2.5 bg-zinc-300 hover:bg-zinc-400"
-                      }`}
-                    />
-                  ))}
+                <div className="flex items-center justify-center gap-2 pb-1 pt-4">
+                  <span className="h-2.5 w-8 rounded-full bg-[#c1123f]" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-black/15" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-black/15" />
                 </div>
               </div>
             </div>
@@ -227,93 +171,96 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section
-        id="featured-companions"
-        className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8"
-      >
-        <div className="mb-5 space-y-2">
-          <p className="text-sm font-medium uppercase tracking-[0.18em] text-rose-600">
-            Featured companions
-          </p>
-          <h2 className="text-3xl font-semibold tracking-[-0.04em] text-zinc-950">
-            Curated personalities, not endless noise
-          </h2>
-          <p className="max-w-2xl text-sm leading-6 text-zinc-600 sm:text-base">
-            Browse a smaller, more intentional collection of companions with
-            distinct personalities, energy, and conversation style.
-          </p>
-        </div>
+      <section className="px-4 py-5 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="max-w-3xl">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-[#c1123f] sm:text-[13px]">
+              Featured companions
+            </p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-black sm:text-4xl lg:text-5xl">
+              Curated personalities, not endless noise
+            </h2>
+            <p className="mt-3 max-w-2xl text-lg leading-8 text-black/65">
+              Browse a smaller, more intentional collection of companions with
+              distinct personalities, energy, and conversation style.
+            </p>
+          </div>
 
-        <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2">
-          {featuredCompanions.map((companion) => (
-            <article
-              key={companion.name}
-              className="group min-w-[18rem] max-w-[18rem] snap-start overflow-hidden rounded-[1.75rem] border border-black/5 bg-white shadow-[0_12px_40px_rgba(24,24,27,0.06)]"
-            >
-              <div className="relative h-72 overflow-hidden bg-zinc-100">
-                <Image
-                  src={companion.cardImage}
-                  alt={`${companion.name} companion card`}
-                  fill
-                  className="object-cover transition duration-500 group-hover:scale-[1.03]"
-                  sizes="18rem"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/15 to-transparent" />
+          <div className="mt-8 grid gap-5 lg:grid-cols-3">
+            {companions.map((companion) => (
+              <article
+                key={companion.id}
+                className="overflow-hidden rounded-[2rem] border border-[#c1123f]/8 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)]"
+              >
+                <div className="relative aspect-[4/4.25] w-full overflow-hidden">
+                  <Image
+                    src={companion.image}
+                    alt={`${companion.name} companion portrait`}
+                    fill
+                    className="object-cover transition duration-500 hover:scale-[1.02]"
+                    sizes="(max-width: 1024px) 100vw, 33vw"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/18 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 p-5 text-white">
+                    <h3 className="text-3xl font-semibold tracking-tight text-white">
+                      {companion.name}
+                      <span className="ml-2 text-white/90">{companion.age}</span>
+                    </h3>
+                    <p className="mt-1 text-base font-medium text-white/92">
+                      {companion.vibe}
+                    </p>
+                  </div>
+                </div>
 
-                <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
-                  <p className="text-2xl font-semibold tracking-[-0.04em]">
-                    {companion.name} {companion.age}
+                <div className="space-y-4 p-5 sm:p-6">
+                  <p className="text-base leading-7 text-black/72">
+                    {companion.summary}
                   </p>
-                  <p className="mt-1 text-sm text-white/90">{companion.tag}</p>
+
+                  <div className="rounded-[1.35rem] bg-[#f9f2f3] p-4">
+                    <p className="text-[15px] leading-7 text-black/62">
+                      {companion.detail}
+                    </p>
+                  </div>
+
+                  <Link
+                    href={`/signup?character=${companion.id}`}
+                    className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#b10f38] px-5 py-3 font-semibold transition hover:bg-[#970d31]"
+                  >
+                    <span className="text-base text-white">Start chatting</span>
+                  </Link>
                 </div>
-              </div>
-
-              <div className="space-y-3 p-5">
-                <p className="text-sm leading-6 text-zinc-600">
-                  {companion.teaser}
-                </p>
-
-                <div className="rounded-2xl bg-zinc-50 p-4 text-sm leading-6 text-zinc-600 transition group-hover:bg-rose-50">
-                  {companion.story}
-                </div>
-
-                <Link
-                  href="/characters"
-                  className="inline-flex items-center justify-center rounded-full bg-zinc-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-zinc-800"
-                >
-                  View companion
-                </Link>
-              </div>
-            </article>
-          ))}
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="overflow-hidden rounded-[2rem] border border-black/5 bg-white p-6 shadow-[0_12px_40px_rgba(24,24,27,0.05)] sm:p-8">
-          <div className="mb-6 space-y-2">
-            <p className="text-sm font-medium uppercase tracking-[0.18em] text-rose-600">
+      <section className="px-4 py-5 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
+        <div className="mx-auto max-w-7xl rounded-[2rem] border border-[#c1123f]/8 bg-white/72 p-5 sm:p-8 lg:p-9">
+          <div className="max-w-3xl">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-[#c1123f] sm:text-[13px]">
               Why users love it
             </p>
-            <h2 className="text-3xl font-semibold tracking-[-0.04em] text-zinc-950">
+            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-black sm:text-4xl lg:text-5xl">
               Built for chemistry, comfort, and consistency
             </h2>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            {benefitItems.map((item) => (
+          <div className="mt-8 grid gap-4 md:grid-cols-2">
+            {benefits.map((benefit) => (
               <div
-                key={item.title}
-                className="rounded-[1.5rem] border border-black/5 bg-[linear-gradient(180deg,#fff,#fff7f7)] p-5"
+                key={benefit.title}
+                className="rounded-[1.75rem] border border-[#c1123f]/8 bg-[#fff8f8] px-5 py-6 sm:px-6"
               >
-                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-lg">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#ffe3ea] text-xl text-[#b10f38]">
                   ✦
                 </div>
-                <p className="text-lg font-semibold tracking-[-0.02em] text-zinc-950">
-                  {item.title}
-                </p>
-                <p className="mt-2 text-sm leading-6 text-zinc-600">
-                  {item.description}
+                <h3 className="mt-4 text-2xl font-semibold tracking-tight text-black">
+                  {benefit.title}
+                </h3>
+                <p className="mt-2 text-base leading-7 text-black/65">
+                  {benefit.text}
                 </p>
               </div>
             ))}
@@ -321,155 +268,145 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="rounded-[2rem] border border-black/5 bg-white p-6 shadow-[0_12px_40px_rgba(24,24,27,0.05)] sm:p-8">
-          <div className="space-y-2">
-            <p className="text-sm font-medium uppercase tracking-[0.18em] text-rose-600">
-              Find your vibe
-            </p>
-            <h2 className="text-3xl font-semibold tracking-[-0.04em] text-zinc-950">
-              Choose the energy that suits you
-            </h2>
-          </div>
-
-          <div className="mt-6 flex flex-wrap gap-3">
-            {vibeItems.map((item) => (
-              <button
-                key={item}
-                type="button"
-                className="rounded-full border border-black/8 bg-[linear-gradient(180deg,#fff,#fff6f6)] px-4 py-2.5 text-sm font-medium text-zinc-800 transition hover:border-rose-200 hover:bg-rose-50"
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="rounded-[2rem] border border-black/5 bg-[linear-gradient(180deg,#fff,#fff6fb)] p-6 shadow-[0_12px_40px_rgba(24,24,27,0.05)] sm:p-8">
-          <p className="text-sm font-medium uppercase tracking-[0.18em] text-rose-600">
+      <section className="px-4 py-5 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
+        <div className="mx-auto max-w-7xl rounded-[2rem] border border-[#c1123f]/8 bg-white/72 px-5 py-8 sm:px-8 lg:px-9 lg:py-10">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-[#c1123f] sm:text-[13px]">
             What it feels like
           </p>
-
-          <blockquote className="mt-4 text-2xl font-semibold leading-tight tracking-[-0.04em] text-zinc-950 sm:text-3xl">
+          <blockquote className="mt-4 max-w-5xl text-3xl font-semibold leading-[1.18] tracking-[-0.03em] text-black sm:text-4xl lg:text-5xl">
             “It feels more like stepping into a familiar conversation than
             opening another app.”
           </blockquote>
-
-          <p className="mt-4 text-sm text-zinc-500">— Early test user</p>
+          <p className="mt-5 text-lg text-black/45">— Early test user</p>
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="overflow-hidden rounded-[2rem] border border-black/5 bg-zinc-950 p-6 text-white shadow-[0_20px_60px_rgba(24,24,27,0.12)] sm:p-8">
-          <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
-            <div>
-              <p className="text-sm font-medium uppercase tracking-[0.18em] text-rose-300">
+      <section className="px-4 py-5 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
+        <div className="mx-auto max-w-7xl rounded-[2rem] bg-black px-5 py-8 text-white shadow-[0_25px_70px_rgba(0,0,0,0.18)] sm:px-8 lg:px-9 lg:py-10">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-3xl">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-[#ff8fa8] sm:text-[13px]">
                 Pricing preview
               </p>
-              <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em]">
+              <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-white sm:text-4xl lg:text-5xl">
                 Start free, upgrade when you want more
               </h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-300 sm:text-base">
-                Try the experience first, then move to Pro for unlimited saved
-                messages and longer-term conversation.
+              <p className="mt-4 max-w-3xl text-lg leading-8 text-white/75">
+                Try the experience first, move to Pro for regular companion
+                access, or choose Unlimited for the full image experience.
               </p>
             </div>
 
             <Link
               href="/upgrade"
-              className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-100"
+              className="inline-flex min-h-14 items-center justify-center self-start rounded-full bg-white px-7 py-3 font-semibold transition hover:bg-white/90"
             >
-              Upgrade
+              <span className="text-base text-black">View plans</span>
             </Link>
           </div>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
-              <p className="text-sm uppercase tracking-[0.18em] text-zinc-400">
+          <div className="mt-8 grid gap-4 lg:grid-cols-3">
+            <div className="rounded-[1.8rem] border border-white/10 bg-white/[0.06] p-6">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-white/55 sm:text-[13px]">
                 Free
               </p>
-              <p className="mt-2 text-4xl font-semibold tracking-[-0.05em]">
+              <p className="mt-3 text-5xl font-semibold tracking-tight text-white">
                 £0
               </p>
-              <p className="mt-3 text-sm leading-6 text-zinc-300">
-                Trial access with limited saved messages and a lighter starter
-                experience.
+              <p className="mt-5 text-lg leading-8 text-white/75">
+                Trial access with limited saved messages and no included image
+                generation.
               </p>
+              <div className="mt-5 space-y-2 text-sm leading-6 text-white/58">
+                <p>• 15 messages per day</p>
+                <p>• One active companion</p>
+                <p>• Images not included</p>
+              </div>
             </div>
 
-            <div className="rounded-[1.5rem] border border-rose-300/25 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(244,114,182,0.10))] p-5">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-sm uppercase tracking-[0.18em] text-rose-200">
+            <div className="rounded-[1.8rem] border border-[#ff6b8f]/20 bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(193,18,63,0.16))] p-6">
+              <div className="flex items-center justify-between gap-4">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-white/75 sm:text-[13px]">
                   Pro
                 </p>
-                <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white">
+                <span className="rounded-full bg-white/12 px-4 py-2 text-sm font-medium text-white">
                   Main plan
                 </span>
               </div>
-              <p className="mt-2 text-4xl font-semibold tracking-[-0.05em]">
+
+              <p className="mt-3 text-5xl font-semibold tracking-tight text-white">
                 £14.99
               </p>
-              <p className="mt-3 text-sm leading-6 text-zinc-200">
-                Unlimited saved messages and full ongoing access for regular
-                users.
+              <p className="mt-5 text-lg leading-8 text-white/82">
+                Unlimited saved messages, 10 personal selfies per day, and 3
+                spicy images per day.
               </p>
+              <div className="mt-5 space-y-2 text-sm leading-6 text-white/65">
+                <p>• Unlimited saved messages</p>
+                <p>• 10 personal selfies daily</p>
+                <p>• 3 spicy images daily</p>
+              </div>
+            </div>
+
+            <div className="rounded-[1.8rem] border border-[#ff8fa8]/30 bg-[linear-gradient(135deg,rgba(255,255,255,0.1),rgba(255,143,168,0.18))] p-6">
+              <div className="flex items-center justify-between gap-4">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-white/75 sm:text-[13px]">
+                  Unlimited
+                </p>
+                <span className="rounded-full bg-white px-4 py-2 text-sm font-medium text-black">
+                  Full access
+                </span>
+              </div>
+
+              <p className="mt-3 text-5xl font-semibold tracking-tight text-white">
+                £29.99
+              </p>
+              <p className="mt-5 text-lg leading-8 text-white/82">
+                Full companion access with unlimited saved messages, personal
+                selfies, and spicy images.
+              </p>
+              <div className="mt-5 space-y-2 text-sm leading-6 text-white/65">
+                <p>• Unlimited saved messages</p>
+                <p>• Unlimited personal selfies</p>
+                <p>• Unlimited spicy images</p>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="rounded-[2rem] border border-black/5 bg-white p-6 text-center shadow-[0_12px_40px_rgba(24,24,27,0.05)] sm:p-10">
-          <p className="text-sm font-medium uppercase tracking-[0.18em] text-rose-600">
+      <section className="px-4 pb-10 pt-5 sm:px-6 sm:pb-12 sm:pt-7 lg:px-8 lg:pb-16 lg:pt-8">
+        <div className="mx-auto max-w-7xl rounded-[2rem] border border-[#c1123f]/8 bg-white/72 px-5 py-8 text-center sm:px-8 lg:px-9 lg:py-10">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-[#c1123f] sm:text-[13px]">
             Ready to explore?
           </p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-zinc-950 sm:text-4xl">
+
+          <h2 className="mx-auto mt-3 max-w-4xl text-3xl font-semibold tracking-[-0.03em] text-black sm:text-4xl lg:text-5xl">
             Find the companion that fits your energy
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-zinc-600 sm:text-base">
+
+          <p className="mx-auto mt-4 max-w-3xl text-lg leading-8 text-black/65">
             Start with a lighter free experience, browse distinct personalities,
             and come back whenever you want company.
           </p>
 
-          <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+          <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               href="/characters"
-              className="inline-flex items-center justify-center rounded-full bg-zinc-950 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-zinc-800"
+              className="inline-flex min-h-14 items-center justify-center rounded-full bg-[#b10f38] px-7 py-3 font-semibold transition hover:bg-[#970d31]"
             >
-              Start chatting
+              <span className="text-base text-white">Start chatting</span>
             </Link>
+
             <Link
-              href="/upgrade"
-              className="inline-flex items-center justify-center rounded-full border border-black/10 bg-white px-6 py-3.5 text-sm font-semibold text-zinc-900 transition hover:bg-zinc-50"
+              href="/characters"
+              className="inline-flex min-h-14 items-center justify-center rounded-full border border-[#c1123f]/14 bg-white px-7 py-3 font-semibold transition hover:border-[#c1123f]/25 hover:bg-[#fff7f8]"
             >
-              View upgrade
+              <span className="text-base text-black">Browse companions</span>
             </Link>
           </div>
         </div>
       </section>
-
-      <footer className="border-t border-black/5 bg-white/60">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-zinc-500 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-          <p>© 2026 AI Companion. All rights reserved.</p>
-
-          <div className="flex flex-wrap items-center gap-4">
-            <Link href="/privacy" className="transition hover:text-zinc-950">
-              Privacy
-            </Link>
-            <Link href="/terms" className="transition hover:text-zinc-950">
-              Terms
-            </Link>
-            <a
-              href="mailto:digitalstrikemarketing@outlook.com"
-              className="transition hover:text-zinc-950"
-            >
-              Support
-            </a>
-          </div>
-        </div>
-      </footer>
     </main>
   );
 }

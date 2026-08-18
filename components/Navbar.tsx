@@ -1,65 +1,109 @@
-// components/Navbar.tsx
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { clearUser, getUser, type StoredUser } from "@/lib/user";
+import { useState } from "react";
+
+type NavLink = {
+  href: string;
+  label: string;
+};
+
+const navLinks: NavLink[] = [
+  { href: "/", label: "Home" },
+  { href: "/about", label: "About" },
+  { href: "/characters", label: "Companions" },
+  { href: "/upgrade", label: "Upgrade" },
+  { href: "/app", label: "Open App" },
+];
 
 export default function Navbar() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const [user, setUser] = useState<StoredUser | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    setUser(getUser());
-  }, []);
-
-  if (pathname === "/") {
-    return null;
-  }
-
-  function handleReset() {
-    clearUser();
-    setUser(null);
-    router.push("/");
-    router.refresh();
-  }
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="border-b border-black/5 bg-white/70 backdrop-blur">
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <Link
-          href="/"
-          className="text-lg font-semibold tracking-[-0.02em] text-zinc-950"
-        >
-          AI Companion
-        </Link>
-
-        <nav className="flex items-center gap-4 text-sm text-zinc-600">
-          <Link href="/" className="transition hover:text-zinc-950">
-            Home
-          </Link>
-          <Link href="/characters" className="transition hover:text-zinc-950">
-            Characters
-          </Link>
-          <Link href="/upgrade" className="transition hover:text-zinc-950">
-            Upgrade
-          </Link>
-
-          {mounted && user ? (
+    <>
+      <header className="sticky top-0 z-30 border-b border-black/5 bg-[#f7eeee]/92 px-4 py-3 backdrop-blur sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={handleReset}
-              className="rounded-full border border-zinc-200 bg-white px-3 py-2 text-zinc-700 transition hover:border-zinc-300 hover:text-zinc-950"
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((prev) => !prev)}
+              className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-black/10 bg-white text-black shadow-sm transition hover:bg-black/[0.03] lg:hidden"
             >
-              Reset user
+              <span className="relative block h-4 w-5">
+                <span
+                  className={`absolute left-0 top-0 h-0.5 w-5 rounded-full bg-black transition ${
+                    menuOpen ? "top-[7px] rotate-45" : ""
+                  }`}
+                />
+                <span
+                  className={`absolute left-0 top-[7px] h-0.5 w-5 rounded-full bg-black transition ${
+                    menuOpen ? "opacity-0" : ""
+                  }`}
+                />
+                <span
+                  className={`absolute left-0 top-[14px] h-0.5 w-5 rounded-full bg-black transition ${
+                    menuOpen ? "top-[7px] -rotate-45" : ""
+                  }`}
+                />
+              </span>
             </button>
-          ) : null}
-        </nav>
-      </div>
-    </header>
+
+            <Link
+              href="/"
+              className="text-lg font-semibold tracking-tight text-black sm:text-xl"
+            >
+              AI Companion
+            </Link>
+          </div>
+
+          <nav className="hidden items-center gap-7 lg:flex">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={
+                  link.href === "/app"
+                    ? "inline-flex min-h-10 items-center justify-center rounded-full bg-[#b10f38] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#970d31]"
+                    : "text-sm font-medium text-black/78 transition hover:text-[#c1123f]"
+                }
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+      </header>
+
+      {menuOpen ? (
+        <div
+          className="fixed inset-0 z-40 bg-black/18 lg:hidden"
+          onClick={() => setMenuOpen(false)}
+        >
+          <div
+            className="absolute left-4 right-4 top-24 rounded-[1.75rem] border border-black/8 bg-white p-4 shadow-[0_24px_80px_rgba(0,0,0,0.12)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <nav className="flex flex-col gap-2">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMenuOpen(false)}
+                  className={
+                    link.href === "/app"
+                      ? "mt-2 inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#b10f38] px-4 py-3 text-base font-semibold text-white transition hover:bg-[#970d31]"
+                      : "inline-flex min-h-12 items-center rounded-2xl px-4 py-3 text-base font-medium text-black/78 transition hover:bg-black/[0.04] hover:text-[#c1123f]"
+                  }
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }
