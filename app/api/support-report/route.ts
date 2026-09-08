@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb, getAdminStorageBucket } from "@/lib/firebaseAdmin";
+import { sendEmail } from "@/lib/email";
 
 export const runtime = "nodejs";
 
@@ -106,6 +107,24 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    const emailResult = await sendEmail({
+      to: SUPPORT_EMAIL,
+      replyTo: email,
+      subject: `[Report] ${reportType} - ${location} (${reportId.slice(0, 8)})`,
+      text: [
+        `New support report submitted.`,
+        ``,
+        `Report ID: ${reportId}`,
+        `Type: ${reportType}`,
+        `Location: ${location}`,
+        `From: ${name} <${email}>`,
+        screenshotPath ? `Screenshot: stored at ${screenshotPath} in Firebase Storage` : `Screenshot: none`,
+        ``,
+        `Description:`,
+        description,
+      ].join("\n"),
+    });
+
     await getAdminDb().collection("supportReports").doc(reportId).set({
       name,
       email,
@@ -115,10 +134,14 @@ export async function POST(request: NextRequest) {
       screenshotPath: screenshotPath || null,
       supportDestination: SUPPORT_EMAIL,
       status: "received",
-      emailDeliveryStatus: "not-connected",
+      emailDeliveryStatus: emailResult.ok ? "sent" : `failed: ${emailResult.error}`,
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     });
+
+    if (!emailResult.ok) {
+      console.error("Support report email failed to send:", emailResult.error);
+    }
 
     return NextResponse.json({ ok: true, reportId });
   } catch (error) {
