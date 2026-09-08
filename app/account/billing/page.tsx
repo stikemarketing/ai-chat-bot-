@@ -29,15 +29,6 @@ type DowngradeToProResponse = {
   currentPeriodEndIso?: string | null;
 };
 
-type DevSwitchCharacterResponse = {
-  ok?: boolean;
-  error?: string;
-  selectedCharacter?: "luna" | "ivy" | "sienna";
-  conversationCleared?: boolean;
-};
-
-type DevCharacterId = "luna" | "ivy" | "sienna";
-
 type BillingStatus = {
   subscriptionCancelAtPeriodEnd: boolean;
   subscriptionCurrentPeriodEndIso: string | null;
@@ -253,27 +244,11 @@ export default function BillingPage() {
   >("idle");
   const [downgradeDate, setDowngradeDate] = useState<string | null>(null);
 
-  const [devCharacterId, setDevCharacterId] =
-    useState<DevCharacterId>("luna");
-  const [isSwitchingCharacter, setIsSwitchingCharacter] = useState(false);
-  const [characterSwitchMessage, setCharacterSwitchMessage] = useState("");
-  const [characterSwitchType, setCharacterSwitchType] = useState<
-    "idle" | "success" | "error"
-  >("idle");
-
   useEffect(() => {
     async function loadUser() {
       try {
         const savedUser = await getUserWithFirestoreFallback();
         setUser(savedUser);
-
-        if (
-          savedUser?.selectedCharacter === "luna" ||
-          savedUser?.selectedCharacter === "ivy" ||
-          savedUser?.selectedCharacter === "sienna"
-        ) {
-          setDevCharacterId(savedUser.selectedCharacter);
-        }
 
         if (savedUser?.id) {
           const status = await getBillingStatus(savedUser.id);
@@ -310,88 +285,6 @@ export default function BillingPage() {
 
   const isDowngradeScheduled =
     billingStatus.subscriptionDowngradeToProAtPeriodEnd === true;
-
-  async function handleDevCharacterSwitch() {
-    if (!user?.id) {
-      setCharacterSwitchType("error");
-      setCharacterSwitchMessage("No signed-in test account was found.");
-      return;
-    }
-
-    if (devCharacterId === user.selectedCharacter) {
-      setCharacterSwitchType("error");
-      setCharacterSwitchMessage(
-        `This test account is already using ${
-          devCharacterId === "ivy"
-            ? "Ivy"
-            : devCharacterId === "sienna"
-            ? "Sienna"
-            : "Luna"
-        }.`
-      );
-      return;
-    }
-
-    try {
-      setIsSwitchingCharacter(true);
-      setCharacterSwitchType("idle");
-      setCharacterSwitchMessage(
-        "Switching companion and clearing this test account’s chat history..."
-      );
-
-      const firebaseIdToken = await getFirebaseIdToken();
-
-      if (!firebaseIdToken) {
-        throw new Error("Please sign in again before switching companion.");
-      }
-
-      const response = await fetch("/api/dev/switch-character", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${firebaseIdToken}`,
-        },
-        body: JSON.stringify({
-          characterId: devCharacterId,
-        }),
-      });
-
-      const data = (await response.json()) as DevSwitchCharacterResponse;
-
-      if (!response.ok || !data.ok || !data.selectedCharacter) {
-        throw new Error(data.error || "Could not switch test companion.");
-      }
-
-      const updatedUser: StoredUser = {
-        ...user,
-        selectedCharacter: data.selectedCharacter,
-      };
-
-      setUser(updatedUser);
-      saveUser(updatedUser);
-
-      setCharacterSwitchType("success");
-      setCharacterSwitchMessage(
-        `Switched to ${
-          data.selectedCharacter === "ivy"
-            ? "Ivy"
-            : data.selectedCharacter === "sienna"
-            ? "Sienna"
-            : "Luna"
-        }. The previous chat history for this test account was cleared.`
-      );
-    } catch (error) {
-      console.error("Failed to switch development companion:", error);
-      setCharacterSwitchType("error");
-      setCharacterSwitchMessage(
-        error instanceof Error
-          ? error.message
-          : "Could not switch test companion."
-      );
-    } finally {
-      setIsSwitchingCharacter(false);
-    }
-  }
 
   async function handleCancelSubscription() {
     if (!user?.id) {
@@ -622,80 +515,6 @@ export default function BillingPage() {
               </p>
             )}
           </div>
-
-          {process.env.NODE_ENV !== "production" ? (
-            <div className="mt-6 rounded-[1.75rem] border-2 border-dashed border-[#c1123f]/25 bg-[#fff4f6] p-5 sm:p-6">
-              <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-[#c1123f] sm:text-[13px]">
-                DEV TESTING ONLY
-              </p>
-
-              <h2 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-black">
-                Switch test companion
-              </h2>
-
-              <p className="mt-3 text-sm leading-7 text-black/62 sm:text-base">
-                This temporary control changes the test account between Luna,
-                Ivy, and Sienna. Switching also clears this account’s current
-                conversation history so the next companion starts with a clean
-                chat. This control is disabled automatically in production.
-              </p>
-
-              <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
-                <label className="flex-1">
-                  <span className="mb-2 block text-sm font-semibold text-black">
-                    Companion
-                  </span>
-
-                  <select
-                    value={devCharacterId}
-                    onChange={(event) =>
-                      setDevCharacterId(event.target.value as DevCharacterId)
-                    }
-                    disabled={isSwitchingCharacter}
-                    className="min-h-12 w-full rounded-[1.15rem] border border-[#c1123f]/14 bg-white px-4 py-3 text-base text-black outline-none transition focus:border-[#c1123f]/35 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    <option value="luna">Luna</option>
-                    <option value="ivy">Ivy</option>
-                    <option value="sienna">Sienna</option>
-                  </select>
-                </label>
-
-                <button
-                  type="button"
-                  onClick={handleDevCharacterSwitch}
-                  disabled={isSwitchingCharacter || !user?.id}
-                  className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#b10f38] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#970d31] disabled:cursor-not-allowed disabled:bg-black/20"
-                >
-                  {isSwitchingCharacter
-                    ? "Switching..."
-                    : "Switch test companion"}
-                </button>
-              </div>
-
-              {characterSwitchMessage ? (
-                <p
-                  className={`mt-4 rounded-[1.2rem] border px-4 py-3 text-sm leading-6 ${
-                    characterSwitchType === "error"
-                      ? "border-[#c1123f]/12 bg-white text-[#8f0d2f]"
-                      : characterSwitchType === "success"
-                      ? "border-black/8 bg-white text-black/72"
-                      : "border-black/8 bg-white text-black/55"
-                  }`}
-                >
-                  {characterSwitchMessage}
-                </p>
-              ) : null}
-
-              {characterSwitchType === "success" && user?.selectedCharacter ? (
-                <Link
-                  href={`/chat/${user.selectedCharacter}`}
-                  className="mt-4 inline-flex min-h-11 items-center justify-center rounded-full border border-[#c1123f]/14 bg-white px-5 py-2 text-sm font-semibold text-black transition hover:border-[#c1123f]/25 hover:bg-[#fff7f8]"
-                >
-                  Open fresh test chat
-                </Link>
-              ) : null}
-            </div>
-          ) : null}
 
           {isPaidPlan && isCancellationScheduled ? (
             <div className="mt-6 rounded-[1.75rem] border border-[#c1123f]/10 bg-white p-5 shadow-[0_10px_30px_rgba(111,0,23,0.04)] sm:p-6">
