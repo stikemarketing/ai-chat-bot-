@@ -10,12 +10,10 @@ import {
   query,
   serverTimestamp,
   setDoc,
-  Timestamp,
   where,
 } from "firebase/firestore";
 import { db } from "./config";
 import { waitForFirebaseAuthUser } from "@/lib/user";
-import { getAppNow, isDevTestClockActive } from "@/lib/devTestClock";
 
 export type ChatMessageRole = "user" | "assistant";
 export type ChatMessageType = "text" | "image";
@@ -40,13 +38,13 @@ export type ConversationRecord = {
   updatedAt?: unknown;
 };
 
-function getChatMessageCreatedAt() {
-  if (isDevTestClockActive()) {
-    return Timestamp.fromDate(getAppNow());
-  }
-
-  return serverTimestamp();
-}
+export type ServerMessageLimitResult = {
+  allowed: boolean;
+  plan?: "free" | "pro" | "unlimited";
+  messageCount?: number | null;
+  remainingToday?: number | null;
+  error?: string;
+};
 
 async function requireMatchingFirebaseUser(userId: string) {
   const firebaseUser = await waitForFirebaseAuthUser();
@@ -68,7 +66,7 @@ function getSafeTimezone(value: string | undefined | null) {
 
   try {
     new Intl.DateTimeFormat("en-GB", { timeZone: timezone }).format(
-      getAppNow()
+      new Date()
     );
 
     return timezone;
@@ -165,7 +163,7 @@ function getLocalDateParts(date: Date, timezone: string) {
 
 function getDailyMessageWindow(timezoneValue?: string | null) {
   const timezone = getSafeTimezone(timezoneValue);
-  const localDate = getLocalDateParts(getAppNow(), timezone);
+  const localDate = getLocalDateParts(new Date(), timezone);
 
   const startOfDay = getUtcDateForLocalTime({
     year: localDate.year,
@@ -266,11 +264,11 @@ export async function saveMessageToFirestore(params: {
     characterId: params.characterId,
   });
 
-  await addDoc(messagesRef, {
+  const messageDoc = await addDoc(messagesRef, {
     role: params.role,
     type: "text",
     text: params.text,
-    createdAt: getChatMessageCreatedAt(),
+    createdAt: serverTimestamp(),
   });
 
   const conversationRef = getCharacterConversationRef({
@@ -288,6 +286,36 @@ export async function saveMessageToFirestore(params: {
     },
     { merge: true }
   );
+
+  return messageDoc.id;
+}
+
+export async function enforceMessageLimitWithServer(params: {
+  userId: string;
+  characterId: string;
+  messageId: string;
+  message: string;
+}) {
+  const firebaseUser = await requireMatchingFirebaseUser(params.userId);
+  const firebaseIdToken = await firebaseUser.getIdToken();
+  const response = await fetch("/api/chat/limit", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${firebaseIdToken}`,
+    },
+    body: JSON.stringify({
+      characterId: params.characterId,
+      messageId: params.messageId,
+      message: params.message,
+    }),
+  });
+  const data = (await response.json()) as ServerMessageLimitResult;
+
+  return {
+    ...data,
+    allowed: response.ok && data.allowed === true,
+  };
 }
 
 export async function saveImageMessageToFirestore(params: {
@@ -320,7 +348,7 @@ export async function saveImageMessageToFirestore(params: {
     imageUrl: params.imageUrl,
     imagePrompt: params.imagePrompt,
     imageStatus: params.imageStatus || "complete",
-    createdAt: getChatMessageCreatedAt(),
+    createdAt: serverTimestamp(),
   });
 
   const conversationRef = getCharacterConversationRef({
@@ -367,7 +395,7 @@ export async function saveGeneratingImageMessageToFirestore(params: {
     imageUrl: "",
     imagePrompt: params.imagePrompt,
     imageStatus: "generating",
-    createdAt: getChatMessageCreatedAt(),
+    createdAt: serverTimestamp(),
   });
 
   const conversationRef = getCharacterConversationRef({

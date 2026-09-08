@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import CharacterSwitchPanel from "@/components/CharacterSwitchPanel";
+import AccountDeletionPanel from "@/components/AccountDeletionPanel";
 import { getUserWithFirestoreFallback, type StoredUser } from "@/lib/user";
 import {
   getPlanDefinition,
@@ -103,16 +105,17 @@ export default function UpgradePage() {
 
   const isPaidPlan =
     currentPlan.id === "pro" || currentPlan.id === "unlimited";
+  const selectedCharacterId = user?.selectedCharacter || "luna";
 
   return (
     <main className="min-h-screen bg-[#f7eeee] px-4 py-6 text-[#111111] sm:px-6 sm:py-8 lg:px-8 lg:py-10">
       <div className="mx-auto w-full max-w-7xl">
         <div className="mb-8">
           <Link
-            href="/characters"
+            href={user ? `/chat/${selectedCharacterId}` : "/characters"}
             className="text-sm font-medium text-black/50 transition hover:text-[#c1123f]"
           >
-            ← Back to companions
+            ← {user ? "Back to chat" : "Back to companions"}
           </Link>
         </div>
 
@@ -149,7 +152,7 @@ export default function UpgradePage() {
 
                 <p>
                   Account:{" "}
-                  <span className="text-black">
+                  <span className="preserve-case text-black">
                     {user?.email || "Not saved yet"}
                   </span>
                 </p>
@@ -157,8 +160,8 @@ export default function UpgradePage() {
                 <p>
                   Billing:{" "}
                   <span className="text-black">
-                    Monthly plans are billed from the user’s own signup date,
-                    not the 1st of the month.
+                    Paid Plans Renew Automatically Each Month On The User&apos;s Own
+                    Billing Date Until Cancelled.
                   </span>
                 </p>
               </div>
@@ -174,6 +177,8 @@ export default function UpgradePage() {
             </div>
           )}
         </section>
+
+        {!loading && user ? <CharacterSwitchPanel source="web" /> : null}
 
         <div className="grid gap-6 lg:grid-cols-3">
           {Object.values(PLAN_DEFINITIONS).map((plan) => {
@@ -290,6 +295,17 @@ export default function UpgradePage() {
             );
           })}
         </div>
+
+        <p className="mt-6 text-center text-sm leading-7 text-black/52">
+          Pro And Unlimited Renew Automatically Every Month Until Cancelled. Read
+          Our{" "}
+          <Link className="text-[#b10f38]" href="/refunds-cancellation">
+            Refund And Cancellation Policy
+          </Link>
+          .
+        </p>
+
+        {!loading && user ? <AccountDeletionPanel /> : null}
       </div>
     </main>
   );

@@ -627,7 +627,7 @@ function getCharacterVisualDescription(characterId: string) {
 
   if (characterId === "ivy") {
     return [
-      "one fictional adult woman",
+      "one fictional 22-year-old adult woman",
       "Ivy",
       "soft blonde hair",
       "elegant confident beauty",
@@ -639,7 +639,7 @@ function getCharacterVisualDescription(characterId: string) {
 
   if (characterId === "sienna") {
     return [
-      "one fictional adult woman",
+      "one fictional 20-year-old adult woman",
       "Sienna",
       "warm auburn-brown hair",
       "romantic expressive beauty",
@@ -663,22 +663,30 @@ function getFalIdentityPrefix(characterId: string) {
   }
 
   if (characterId === "ivy") {
-    return "a photo of Ivy, one fictional adult woman";
+    return "a photo of 22-year-old Ivy, one fictional adult woman with a youthful adult face";
   }
 
   if (characterId === "sienna") {
-    return "a photo of Sienna, one fictional adult woman";
+    return "a photo of 20-year-old Sienna, one fictional adult woman with a youthful adult face";
   }
 
   return "a photo of one fictional adult woman";
 }
 
 function getFalYouthInstruction(characterId: string) {
-  if (characterId !== "luna") {
-    return "";
+  if (characterId === "luna") {
+    return "Age and face rules: Luna must look like a 27-year-old adult woman with a fresh youthful young-adult face, smooth natural skin, soft youthful features, bright eyes, and a young adult girlfriend look. She must not look older, middle-aged, mature-faced, aged, tired, or heavily lined.";
   }
 
-  return "Age and face rules: Luna must look like a 27-year-old adult woman with a fresh youthful young-adult face, smooth natural skin, soft youthful features, bright eyes, and a young adult girlfriend look. She must not look older, middle-aged, mature-faced, aged, tired, or heavily lined.";
+  if (characterId === "ivy") {
+    return "Age and face rules: Ivy must look like a 22-year-old adult woman with a fresh youthful adult face, smooth natural skin, and youthful adult features. She must clearly remain an adult and must not look under 18, middle-aged, mature-faced, aged, tired, or heavily lined.";
+  }
+
+  if (characterId === "sienna") {
+    return "Age and face rules: Sienna must look like a 20-year-old adult woman with a fresh youthful adult face, smooth natural skin, and youthful adult features. She must clearly remain an adult and must not look under 18, middle-aged, mature-faced, aged, tired, or heavily lined.";
+  }
+
+  return "";
 }
 
 function getFalPersonalSelfieStyleInstruction(params: {
@@ -881,6 +889,10 @@ export function buildFalPrompt(params: {
     `User request: ${cleanUserPrompt}.`,
     params.characterId === "luna"
       ? "Important quality rules: one woman only, adult 27-year-old woman, realistic skin texture, natural body proportions, realistic youthful face, natural hands, exactly two arms, exactly two hands, no extra limbs, no duplicated body parts, no warped anatomy, no second person, not older-looking, not middle-aged, not mature-faced, not anime, not cartoon, not illustration, not 3d render, no text, no watermark."
+      : params.characterId === "ivy"
+      ? "Important quality rules: one woman only, adult 22-year-old woman who clearly looks 18 or older, realistic skin texture, natural body proportions, realistic youthful adult face, natural hands, exactly two arms, exactly two hands, no extra limbs, no duplicated body parts, no warped anatomy, no second person, not underage-looking, not older-looking, not middle-aged, not anime, not cartoon, not illustration, not 3d render, no text, no watermark."
+      : params.characterId === "sienna"
+      ? "Important quality rules: one woman only, adult 20-year-old woman who clearly looks 18 or older, realistic skin texture, natural body proportions, realistic youthful adult face, natural hands, exactly two arms, exactly two hands, no extra limbs, no duplicated body parts, no warped anatomy, no second person, not underage-looking, not older-looking, not middle-aged, not anime, not cartoon, not illustration, not 3d render, no text, no watermark."
       : "Important quality rules: one woman only, adult woman, realistic skin texture, natural body proportions, realistic face, natural hands, exactly two arms, exactly two hands, no extra limbs, no duplicated body parts, no warped anatomy, no second person, not anime, not cartoon, not illustration, not 3d render, no text, no watermark.",
   ].filter(Boolean);
 

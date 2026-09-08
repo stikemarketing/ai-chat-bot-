@@ -217,7 +217,7 @@ export default function ProCheckoutPage() {
               <div className="space-y-1">
                 <p>
                   Checkout account:{" "}
-                  <span className="font-semibold text-black">
+                  <span className="preserve-case font-semibold text-black">
                     {user.email || user.name || "Current user"}
                   </span>
                 </p>
@@ -244,6 +244,23 @@ export default function ProCheckoutPage() {
           ) : null}
 
           <div className="mt-8 space-y-3">
+            <div className="rounded-[1.35rem] border border-[#c1123f]/10 bg-[#fff8f8] px-5 py-4 text-sm leading-7 text-black/65">
+              <p>
+                £14.99 Is Charged When The Subscription Starts And Automatically
+                Every Month On Your Billing Date Until You Cancel. Cancellation
+                Stops The Next Renewal; Access Continues Until The End Of The
+                Current Paid Period.
+              </p>
+              <p className="mt-2">
+                Payments Are Generally Non-Refundable Once Paid Access Begins,
+                Except Where Required By Law. Read Our{" "}
+                <Link className="text-[#b10f38]" href="/refunds-cancellation">
+                  Refund And Cancellation Policy
+                </Link>
+                .
+              </p>
+            </div>
+
             {user ? (
               <button
                 type="button"

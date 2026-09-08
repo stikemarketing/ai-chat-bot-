@@ -49,6 +49,72 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Shared luxury interface rules. Chat/account content can opt out with
+   .preserve-case or data-preserve-case. */
+body.luxury-interface {
+  font-weight: 300;
+  text-transform: capitalize;
+}
+
+body.luxury-interface * {
+  font-weight: 300 !important;
+}
+
+body.luxury-interface :where(p, li, label, span, blockquote, td, th) {
+  font-weight: 300 !important;
+}
+
+body.luxury-interface :where(h1, h2, h3, h4, h5, h6, [data-ui-heading]) {
+  font-weight: 500 !important;
+}
+
+body.luxury-interface :where(strong, b) {
+  font-weight: 400 !important;
+}
+
+body.luxury-interface :where(button, a) {
+  font-weight: 400 !important;
+}
+
+body.luxury-interface
+  :where(button:not([data-ui-control]), a.inline-flex) {
+  border-color: transparent !important;
+  background-color: var(--accent-strong) !important;
+  color: #ffffff !important;
+}
+
+body.luxury-interface
+  :where(button:not([data-ui-control]), a.inline-flex):hover {
+  background-color: var(--accent-hover) !important;
+  color: #ffffff !important;
+}
+
+body.luxury-interface
+  :where(button:not([data-ui-control]), a.inline-flex)
+  * {
+  color: inherit !important;
+}
+
+body.luxury-interface
+  :where(button:disabled:not([data-ui-control]), a.inline-flex.pointer-events-none) {
+  border-color: rgba(17, 17, 17, 0.08) !important;
+  background-color: rgba(17, 17, 17, 0.08) !important;
+  color: rgba(17, 17, 17, 0.42) !important;
+  box-shadow: none !important;
+}
+
+body.luxury-interface :where(input, textarea, select),
+body.luxury-interface .preserve-case,
+body.luxury-interface .preserve-case *,
+body.luxury-interface [data-preserve-case],
+body.luxury-interface [data-preserve-case] * {
+  text-transform: none !important;
+}
+
+body.luxury-interface :where(input, textarea)::placeholder {
+  text-transform: capitalize;
+}
+
 img {
   display: block;
   max-width: 100%;

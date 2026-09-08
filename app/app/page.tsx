@@ -34,10 +34,10 @@ export default function AppEntryPage() {
           return;
         }
 
-        router.replace("/signup");
+        router.replace("/signup?mode=signin&source=app");
       } catch (error) {
         console.error("Failed to open app entry route:", error);
-        router.replace("/signup");
+        router.replace("/signup?mode=signin&source=app");
       } finally {
         setIsCheckingUser(false);
       }
@@ -51,7 +51,7 @@ export default function AppEntryPage() {
       <div className="mx-auto flex min-h-[70vh] max-w-md flex-col items-center justify-center text-center">
         <div className="rounded-[2rem] border border-[#c1123f]/10 bg-white/75 p-6 shadow-[0_20px_60px_rgba(111,0,23,0.06)]">
           <p className="text-[12px] font-semibold uppercase tracking-[0.24em] text-[#c1123f]">
-            AI Companion
+            Close Too You
           </p>
 
           <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-black">
@@ -72,7 +72,7 @@ export default function AppEntryPage() {
 
           <div className="mt-6">
             <Link
-              href="/signup"
+              href="/signup?mode=signin&source=app"
               className="text-sm font-semibold text-[#b10f38] underline-offset-4 hover:underline"
             >
               Sign in manually

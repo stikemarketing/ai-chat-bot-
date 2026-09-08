@@ -16,6 +16,8 @@ export type StoredUser = {
   goodMorningMessageTime?: string;
   goodMorningTimezone?: string;
   goodMorningCharacterId?: string;
+  adultVerified?: boolean;
+  adultVerificationStatus?: "not_started" | "pending" | "verified" | "failed";
 };
 
 const STORAGE_KEY = "ai-companion-user";
@@ -92,6 +94,9 @@ function getStoredUserFromFirebaseAuthUser(
       fallbackUser?.goodMorningCharacterId ||
       fallbackUser?.selectedCharacter ||
       "luna",
+    adultVerified: fallbackUser?.adultVerified === true,
+    adultVerificationStatus:
+      fallbackUser?.adultVerificationStatus || "not_started",
   };
 }
 
@@ -124,6 +129,9 @@ function mergeFirestoreUserWithAuthUser(params: {
       params.firestoreUser.goodMorningCharacterId ||
       params.firestoreUser.selectedCharacter ||
       "luna",
+    adultVerified: params.firestoreUser.adultVerified === true,
+    adultVerificationStatus:
+      params.firestoreUser.adultVerificationStatus || "not_started",
   };
 }
 

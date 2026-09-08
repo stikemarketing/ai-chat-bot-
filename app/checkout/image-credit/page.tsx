@@ -234,7 +234,7 @@ export default function ImageCreditCheckoutPage() {
               <div className="space-y-3 text-base leading-8 text-black/68">
                 <p>
                   Signed-in account:{" "}
-                  <span className="font-semibold text-black">
+                  <span className="preserve-case font-semibold text-black">
                     {savedUser.email || savedUser.name || "Current user"}
                   </span>
                 </p>

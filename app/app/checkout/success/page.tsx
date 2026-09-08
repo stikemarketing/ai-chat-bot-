@@ -352,7 +352,7 @@ export default function AppCheckoutSuccessPage() {
               ? "Your token pack has been added"
               : expectedPlanLabel === "paid"
               ? "Your upgrade is being activated"
-              : `You’re upgrading to ${expectedPlanLabel}`}
+              : `You’re now on ${expectedPlanLabel}`}
           </h2>
 
           <p className="mt-4 text-sm leading-7 text-black/65">
@@ -370,7 +370,7 @@ export default function AppCheckoutSuccessPage() {
               <div className="space-y-2 text-sm leading-6 text-black/62">
                 <p>
                   Account:{" "}
-                  <span className="font-bold text-black">
+                  <span className="preserve-case font-bold text-black">
                     {savedUser.email || savedUser.name || "Current user"}
                   </span>
                 </p>

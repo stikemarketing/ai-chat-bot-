@@ -1,6 +1,8 @@
 // app/page.tsx
 import Link from "next/link";
 import Image from "next/image";
+import HomeBackToChatButton from "@/components/HomeBackToChatButton";
+import HomeCompanionButton from "@/components/HomeCompanionButton";
 
 const companions = [
   {
@@ -16,21 +18,21 @@ const companions = [
   {
     id: "ivy",
     name: "Ivy",
-    age: 27,
-    vibe: "Elegant & magnetic",
-    summary: "Polished, confident, and quietly impossible to ignore.",
+    age: 22,
+    vibe: "Bold & teasing",
+    summary: "Confident, witty, stylish, and always ready to tease.",
     detail:
-      "Refined and composed with a luxury energy. Ivy feels sophisticated, emotionally steady, and effortlessly captivating.",
+      "Independent and playful with a mysterious edge. Ivy brings strong opinions, easy confidence, and lively chemistry.",
     image: "/companions/ivy-main.png",
   },
   {
     id: "sienna",
     name: "Sienna",
-    age: 26,
-    vibe: "Romantic & bold",
-    summary: "Warm, passionate, and made for unforgettable evenings.",
+    age: 20,
+    vibe: "Caring & confident",
+    summary: "Warm, thoughtful, supportive, and boldly romantic.",
     detail:
-      "Expressive, intimate, and full of date-night energy. Sienna feels rich, confident, and emotionally magnetic.",
+      "Attentive and grounded with a talent for practical advice. Sienna listens closely and knows when to take the lead.",
     image: "/companions/sienna-main.png",
   },
 ] as const;
@@ -80,12 +82,7 @@ export default function HomePage() {
               </div>
 
               <div className="flex flex-col gap-3 pt-1 sm:flex-row">
-                <Link
-                  href="/characters"
-                  className="inline-flex min-h-14 items-center justify-center rounded-full bg-[#b10f38] px-7 py-3 font-semibold transition hover:bg-[#970d31]"
-                >
-                  <span className="text-base text-white">Start chatting</span>
-                </Link>
+                <HomeBackToChatButton />
 
                 <Link
                   href="/about"
@@ -223,12 +220,7 @@ export default function HomePage() {
                     </p>
                   </div>
 
-                  <Link
-                    href={`/signup?character=${companion.id}`}
-                    className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#b10f38] px-5 py-3 font-semibold transition hover:bg-[#970d31]"
-                  >
-                    <span className="text-base text-white">Start chatting</span>
-                  </Link>
+                  <HomeCompanionButton companionId={companion.id} />
                 </div>
               </article>
             ))}
@@ -391,12 +383,7 @@ export default function HomePage() {
           </p>
 
           <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link
-              href="/characters"
-              className="inline-flex min-h-14 items-center justify-center rounded-full bg-[#b10f38] px-7 py-3 font-semibold transition hover:bg-[#970d31]"
-            >
-              <span className="text-base text-white">Start chatting</span>
-            </Link>
+            <HomeBackToChatButton />
 
             <Link
               href="/characters"

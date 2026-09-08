@@ -5,6 +5,10 @@ import {
   type RelationshipMemory,
 } from "@/lib/relationshipMemory";
 import { normalizePlan, type AppPlan } from "@/lib/plans";
+import {
+  normalizeAdultVerificationStatus,
+  type AdultVerificationStatus,
+} from "@/lib/ageAssurance";
 import { db } from "./config";
 
 export type FirestoreUser = {
@@ -22,6 +26,16 @@ export type FirestoreUser = {
   goodMorningMessageTime?: string;
   goodMorningTimezone?: string;
   goodMorningCharacterId?: string;
+  adultVerified?: boolean;
+  adultVerificationStatus?: AdultVerificationStatus;
+  adultVerificationProvider?: string;
+  adultVerifiedAt?: unknown;
+  termsAcceptedAt?: unknown;
+  termsVersion?: string;
+  privacyAcceptedAt?: unknown;
+  privacyVersion?: string;
+  aiDisclosureAcceptedAt?: unknown;
+  aiDisclosureVersion?: string;
   createdAt?: unknown;
   updatedAt?: unknown;
 };
@@ -114,6 +128,26 @@ export async function getUserFromFirestore(userId: string) {
     goodMorningCharacterId: getSafeCharacterId(
       data.goodMorningCharacterId || data.selectedCharacter
     ),
+    adultVerified: data.adultVerified === true,
+    adultVerificationStatus: normalizeAdultVerificationStatus(
+      data.adultVerificationStatus
+    ),
+    adultVerificationProvider:
+      typeof data.adultVerificationProvider === "string"
+        ? data.adultVerificationProvider
+        : undefined,
+    adultVerifiedAt: data.adultVerifiedAt,
+    termsAcceptedAt: data.termsAcceptedAt,
+    termsVersion:
+      typeof data.termsVersion === "string" ? data.termsVersion : undefined,
+    privacyAcceptedAt: data.privacyAcceptedAt,
+    privacyVersion:
+      typeof data.privacyVersion === "string" ? data.privacyVersion : undefined,
+    aiDisclosureAcceptedAt: data.aiDisclosureAcceptedAt,
+    aiDisclosureVersion:
+      typeof data.aiDisclosureVersion === "string"
+        ? data.aiDisclosureVersion
+        : undefined,
     createdAt: data.createdAt,
     updatedAt: data.updatedAt,
   } satisfies FirestoreUser;

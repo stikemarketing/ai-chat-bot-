@@ -59,7 +59,7 @@ service cloud.firestore {
         ])
         && (!("name" in request.resource.data) || request.resource.data.name is string)
         && (!("email" in request.resource.data) || request.resource.data.email is string)
-        && (!("timezone" in request.resource.data) || request.resource.data.timezone is string)
+        && request.resource.data.timezone == resource.data.timezone
         && (!("trialActive" in request.resource.data) || request.resource.data.trialActive is bool)
         && (!("selectedCharacter" in request.resource.data) || isAllowedCharacter(request.resource.data.selectedCharacter))
         && (!("goodMorningMessagesEnabled" in request.resource.data) || request.resource.data.goodMorningMessagesEnabled is bool)

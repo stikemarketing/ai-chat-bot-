@@ -24,7 +24,7 @@ export default function PrivacyPage() {
           </h1>
 
           <p className="mt-4 text-base leading-8 text-black/65">
-            Effective date: 4 May 2026
+            Effective Date: 30 August 2026
           </p>
 
           <div className="mt-8 space-y-8 text-base leading-8 text-black/68">
@@ -33,7 +33,7 @@ export default function PrivacyPage() {
                 1. Overview
               </h2>
               <p className="mt-2">
-                AI Companion collects and processes limited user information to
+                Close Too You collects and processes limited user information to
                 provide account access, chat functionality, subscription access,
                 and support. By using the service, you agree to this policy.
               </p>
@@ -75,9 +75,9 @@ export default function PrivacyPage() {
                 4. Payments
               </h2>
               <p className="mt-2">
-                Paid subscriptions are processed through third-party payment
-                providers such as Stripe. We do not store full card details on
-                our own servers.
+                Paid Subscriptions Are Processed Through An Approved Third-Party
+                Payment Provider. We Do Not Store Full Card Details On Our Own
+                Servers.
               </p>
             </section>
 
@@ -118,11 +118,39 @@ export default function PrivacyPage() {
 
             <section>
               <h2 className="text-xl font-semibold tracking-tight text-black">
-                8. Contact
+                8. Account And Data Deletion
+              </h2>
+              <p className="mt-2">
+                Signed-In Users Can Permanently Delete Their Account From The
+                Plans Or Billing Page. Immediate Deletion Cancels Any Active
+                Subscription, Ends Access, Signs The User Out, And Deletes The
+                Firebase Account Together With Associated Conversations,
+                Messages, Settings, Usage Records, Push Tokens, And Stored
+                Account Files. Permanent Deletion Cannot Be Undone.
+              </p>
+              <p className="mt-3">
+                Limited Information May Be Retained Where Necessary To Meet A
+                Legal, Tax, Accounting, Fraud-Prevention, Safety, Dispute, Or
+                Regulatory Obligation. Payment Providers May Also Retain Their
+                Own Transaction Records Under Their Separate Legal Duties And
+                Privacy Policies. Support And Complaint Records May Be Retained
+                For As Long As Reasonably Needed To Investigate And Resolve The
+                Matter.
+              </p>
+              <p className="mt-3">
+                Users Who Want To Keep Paid Access Until The End Of Their Current
+                Billing Period Should Cancel Their Subscription First And Delete
+                The Account After It Returns To Free.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold tracking-tight text-black">
+                9. Contact
               </h2>
               <p className="mt-2">For privacy questions, contact:</p>
               <p className="mt-2 break-all font-semibold text-[#c1123f]">
-                digitalstrikemarketing@outlook.com
+                digitalstrikesupport@gmail.com
               </p>
             </section>
           </div>

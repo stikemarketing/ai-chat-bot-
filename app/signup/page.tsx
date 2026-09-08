@@ -30,6 +30,7 @@ const characterImages: Record<string, string> = {
 
 const PENDING_CHARACTER_KEY = "ai-companion-pending-character";
 const PENDING_NAME_KEY = "ai-companion-pending-name";
+type EntrySource = "web" | "app";
 
 function savePendingCharacter(characterId: string) {
   if (typeof window === "undefined") {
@@ -100,6 +101,26 @@ function getCharacterFromUrl() {
   );
 
   return matchingCharacter?.id ?? null;
+}
+
+function getAccountModeFromUrl() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return new URLSearchParams(window.location.search).get("mode") === "signin"
+    ? "signin"
+    : null;
+}
+
+function getEntrySourceFromUrl(): EntrySource {
+  if (typeof window === "undefined") {
+    return "web";
+  }
+
+  return new URLSearchParams(window.location.search).get("source") === "app"
+    ? "app"
+    : "web";
 }
 
 function getPlanLabel(plan: string | null | undefined) {
@@ -184,6 +205,8 @@ export default function SignupPage() {
   const [mounted, setMounted] = useState(false);
   const [existingUser, setExistingUser] = useState<StoredUser | null>(null);
   const [selectedCharacterId, setSelectedCharacterId] = useState("luna");
+  const [hasChosenCharacter, setHasChosenCharacter] = useState(false);
+  const [entrySource, setEntrySource] = useState<EntrySource>("web");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -194,6 +217,9 @@ export default function SignupPage() {
   const [statusTone, setStatusTone] = useState<"error" | "success" | "info">("info");
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [isLoadingExistingUser, setIsLoadingExistingUser] = useState(true);
+  const [adultConfirmed, setAdultConfirmed] = useState(false);
+  const [legalAccepted, setLegalAccepted] = useState(false);
+  const [aiDisclosureAccepted, setAiDisclosureAccepted] = useState(false);
 
   useEffect(() => {
     async function loadExistingUser() {
@@ -202,10 +228,21 @@ export default function SignupPage() {
 
         const characterFromUrl = getCharacterFromUrl();
         const pendingCharacter = getPendingCharacter();
+        const requestedAccountMode = getAccountModeFromUrl();
+        const source = getEntrySourceFromUrl();
         const initialCharacterId =
           characterFromUrl || pendingCharacter || "luna";
 
+        setEntrySource(source);
+        setHasChosenCharacter(Boolean(characterFromUrl || pendingCharacter));
         setSelectedCharacterId(initialCharacterId);
+
+        if (requestedAccountMode === "signin") {
+          setAccountMode("signin");
+        } else if (!characterFromUrl && !pendingCharacter) {
+          router.replace("/characters");
+          return;
+        }
 
         if (characterFromUrl) {
           savePendingCharacter(characterFromUrl);
@@ -236,7 +273,7 @@ export default function SignupPage() {
     }
 
     loadExistingUser();
-  }, []);
+  }, [router]);
 
   const selectedCharacter = useMemo(() => {
     return (
@@ -285,6 +322,17 @@ export default function SignupPage() {
       return;
     }
 
+    if (
+      accountMode === "signup" &&
+      (!adultConfirmed || !legalAccepted || !aiDisclosureAccepted)
+    ) {
+      setStatusTone("error");
+      setStatusMessage(
+        "Please Confirm That You Are 18 Or Over And Accept The Required Terms Before Creating Your Account."
+      );
+      return;
+    }
+
     if (!trimmedEmail) {
       setStatusTone("error");
       setStatusMessage("Please enter your email address.");
@@ -313,6 +361,30 @@ export default function SignupPage() {
           await updateProfile(authResult.user, {
             displayName: trimmedName,
           });
+        }
+
+        const confirmationToken = await authResult.user.getIdToken();
+        const confirmationResponse = await fetch("/api/age-assurance/accept", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${confirmationToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            adultConfirmed: true,
+            termsAccepted: true,
+            privacyAccepted: true,
+            aiDisclosureAccepted: true,
+          }),
+        });
+        if (!confirmationResponse.ok) {
+          const confirmationData = (await confirmationResponse.json()) as {
+            error?: string;
+          };
+          throw new Error(
+            confirmationData.error ||
+              "Your Account Confirmations Could Not Be Saved."
+          );
         }
 
         savePendingCharacter(selectedCharacter.id);
@@ -407,7 +479,21 @@ export default function SignupPage() {
       clearPendingName();
 
       setExistingUser(authenticatedUser);
-      router.push("/characters");
+      if (!authenticatedUser.adultVerified) {
+        const verificationParams = new URLSearchParams({
+          source: entrySource,
+          character: authenticatedUser.selectedCharacter,
+        });
+        router.replace(`/age-verification?${verificationParams.toString()}`);
+        return;
+      }
+
+      const chatPath =
+        entrySource === "app"
+          ? `/app/chat/${authenticatedUser.selectedCharacter}`
+          : `/chat/${authenticatedUser.selectedCharacter}`;
+
+      router.replace(chatPath);
     } catch (error) {
       console.error("Failed to create/sign in user:", error);
       setStatusTone("error");
@@ -533,6 +619,11 @@ export default function SignupPage() {
               <button
                 type="button"
                 onClick={() => {
+                  if (!hasChosenCharacter) {
+                    router.push("/characters");
+                    return;
+                  }
+
                   setAccountMode("signup");
                   setStatusTone("info");
                   setStatusMessage("");
@@ -647,6 +738,53 @@ export default function SignupPage() {
                   )}
                 </p>
               </div>
+
+              {accountMode === "signup" ? (
+                <fieldset className="space-y-3 rounded-[1.5rem] border border-[#c1123f]/10 bg-white p-5">
+                  <legend className="px-1 text-sm text-black">
+                    Adult Account Confirmation
+                  </legend>
+
+                  <label className="flex cursor-pointer items-start gap-3 text-sm leading-6 text-black/70">
+                    <input
+                      type="checkbox"
+                      checked={adultConfirmed}
+                      onChange={(event) => setAdultConfirmed(event.target.checked)}
+                      className="mt-1 h-5 w-5 accent-[#b10f38]"
+                    />
+                    <span>I Confirm That I Am At Least 18 Years Old.</span>
+                  </label>
+
+                  <label className="flex cursor-pointer items-start gap-3 text-sm leading-6 text-black/70">
+                    <input
+                      type="checkbox"
+                      checked={legalAccepted}
+                      onChange={(event) => setLegalAccepted(event.target.checked)}
+                      className="mt-1 h-5 w-5 accent-[#b10f38]"
+                    />
+                    <span>
+                      I Accept The <Link href="/terms" className="text-[#b10f38]">Terms</Link>{" "}
+                      And <Link href="/privacy" className="text-[#b10f38]">Privacy Policy</Link>.
+                    </span>
+                  </label>
+
+                  <label className="flex cursor-pointer items-start gap-3 text-sm leading-6 text-black/70">
+                    <input
+                      type="checkbox"
+                      checked={aiDisclosureAccepted}
+                      onChange={(event) =>
+                        setAiDisclosureAccepted(event.target.checked)
+                      }
+                      className="mt-1 h-5 w-5 accent-[#b10f38]"
+                    />
+                    <span>
+                      I Understand That The Companions, Conversations And
+                      Images Are Generated By Artificial Intelligence And Are
+                      Not Real People.
+                    </span>
+                  </label>
+                </fieldset>
+              ) : null}
 
               {statusMessage ? (
                 <div

@@ -32,6 +32,7 @@ export const PLAN_DEFINITIONS: Record<AppPlan, PlanDefinition> = {
       "Basic text chat access",
       "Personal selfies not included",
       "Spicy images not included",
+      "Character switching not included",
     ],
   },
   pro: {
@@ -50,6 +51,7 @@ export const PLAN_DEFINITIONS: Record<AppPlan, PlanDefinition> = {
       "Daily image reset based on your timezone",
       "Upgrade to Unlimited for unrestricted image access",
       "Full paid companion experience with daily image allowances",
+      "One character switch for the lifetime of the account",
     ],
   },
   unlimited: {
@@ -67,6 +69,7 @@ export const PLAN_DEFINITIONS: Record<AppPlan, PlanDefinition> = {
       "No daily image limits",
       "Unrestricted image access",
       "Built for the full companion experience",
+      "One character switch per calendar month",
     ],
   },
 };

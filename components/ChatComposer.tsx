@@ -63,6 +63,7 @@ export default function ChatComposer({
         <div className="flex flex-wrap gap-2">
           {quickEmojis.map((emoji) => (
             <button
+              data-ui-control="emoji"
               key={emoji}
               type="button"
               onClick={() => handleEmojiClick(emoji)}

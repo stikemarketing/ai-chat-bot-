@@ -11,6 +11,7 @@ import {
   type StoredUser,
 } from "@/lib/user";
 import { getPlanDefinition, normalizePlan } from "@/lib/plans";
+import AccountDeletionPanel from "@/components/AccountDeletionPanel";
 
 type CancelSubscriptionResponse = {
   ok?: boolean;
@@ -553,12 +554,19 @@ export default function BillingPage() {
   return (
     <main className="min-h-screen bg-[#f7eeee] px-4 py-6 text-[#111111] sm:px-6 sm:py-8 lg:px-8 lg:py-10">
       <div className="mx-auto w-full max-w-4xl">
-        <div className="mb-8">
+        <div className="mb-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+          <Link
+            href={`/chat/${selectedCharacterId}`}
+            className="text-sm font-semibold text-[#b10f38] transition hover:text-[#970d31]"
+          >
+            ← Back to chat
+          </Link>
+
           <Link
             href="/upgrade"
             className="text-sm font-medium text-black/50 transition hover:text-[#c1123f]"
           >
-            ← Back to plans
+            Back to plans
           </Link>
         </div>
 
@@ -586,7 +594,7 @@ export default function BillingPage() {
               <div className="space-y-3 text-base leading-8 text-black/68">
                 <p>
                   Account:{" "}
-                  <span className="font-semibold text-black">
+                  <span className="preserve-case font-semibold text-black">
                     {user.email || user.name || "Current test user"}
                   </span>
                 </p>
@@ -888,6 +896,22 @@ export default function BillingPage() {
               </p>
             </div>
           )}
+
+          <div className="mt-6 rounded-[1.75rem] border border-[#c1123f]/10 bg-white p-5 sm:p-6">
+            <h2 className="text-2xl tracking-[-0.03em] text-black">Billing Support</h2>
+            <p className="mt-3 text-sm leading-7 text-black/62 sm:text-base">
+              For A Duplicate Charge, Refund Question, Or Billing Problem, Email{" "}
+              <a className="preserve-case text-[#b10f38]" href="mailto:digitalstrikesupport@gmail.com">
+                digitalstrikesupport@gmail.com
+              </a>
+              . Please Do Not Send Passwords Or Full Payment-Card Details.
+            </p>
+            <Link className="mt-5 inline-flex min-h-12 items-center justify-center rounded-full bg-[#b10f38] px-6 py-3 text-sm text-white" href="/refunds-cancellation">
+              Read The Refund And Cancellation Policy
+            </Link>
+          </div>
+
+          <AccountDeletionPanel />
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link

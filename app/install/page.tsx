@@ -6,32 +6,32 @@ const installSteps = [
     title: "iPhone or iPad",
     browser: "Safari",
     steps: [
-      "Open AI Companion in Safari.",
+      "Open Close Too You in Safari.",
       "Tap the Share button at the bottom of the screen.",
       "Scroll down and tap Add to Home Screen.",
       "Tap Add.",
-      "Open AI Companion from your home screen like a normal app.",
+      "Open Close Too You from your home screen like a normal app.",
     ],
   },
   {
     title: "Android",
     browser: "Chrome",
     steps: [
-      "Open AI Companion in Chrome.",
+      "Open Close Too You in Chrome.",
       "Tap the three-dot menu in the top corner.",
       "Tap Install app or Add to Home screen.",
       "Tap Install or Add.",
-      "Open AI Companion from your home screen.",
+      "Open Close Too You from your home screen.",
     ],
   },
   {
     title: "Desktop",
     browser: "Chrome, Edge, or supported browsers",
     steps: [
-      "Open AI Companion in your browser.",
+      "Open Close Too You in your browser.",
       "Look for the install icon in the address bar.",
       "Click Install.",
-      "Open AI Companion from your apps or dock.",
+      "Open Close Too You from your apps or dock.",
     ],
   },
 ] as const;
@@ -55,11 +55,11 @@ export default function InstallPage() {
           </p>
 
           <h1 className="mt-3 max-w-3xl text-4xl font-semibold tracking-[-0.04em] text-black sm:text-5xl">
-            Add AI Companion to your home screen
+            Add Close Too You to your home screen
           </h1>
 
           <p className="mt-4 max-w-3xl text-base leading-8 text-black/65 sm:text-lg">
-            AI Companion can be opened from your phone like an app. You do not
+            Close Too You can be opened from your phone like an app. You do not
             need to download it from the App Store or Google Play during this
             web app version.
           </p>

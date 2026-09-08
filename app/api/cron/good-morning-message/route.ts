@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb, getAdminMessaging } from "@/lib/firebaseAdmin";
 import { normalizePlan } from "@/lib/plans";
+import { isAgeAssuranceEnforced } from "@/lib/ageAssurance";
 
 type CharacterId = "luna" | "ivy" | "sienna";
 
@@ -358,6 +359,15 @@ export async function GET(request: NextRequest) {
       const userId = userDoc.id;
       const user = userDoc.data() || {};
 
+      if (isAgeAssuranceEnforced() && user.adultVerified !== true) {
+        results.push({
+          userId,
+          status: "skipped",
+          reason: "age-verification-required",
+        });
+        continue;
+      }
+
       const plan = normalizePlan(user.plan);
 
       if (plan === "free") {
@@ -365,15 +375,6 @@ export async function GET(request: NextRequest) {
           userId,
           status: "skipped",
           reason: "good-morning-requires-paid-plan",
-        });
-        continue;
-      }
-
-      if (user.pushNotificationsEnabled !== true) {
-        results.push({
-          userId,
-          status: "skipped",
-          reason: "push-notifications-disabled",
         });
         continue;
       }
@@ -450,23 +451,25 @@ export async function GET(request: NextRequest) {
         failures: [],
       };
 
-      try {
-        push = await sendPushNotification({
-          userId,
-          characterId,
-          characterName,
-          message,
-        });
-      } catch (error) {
-        push = {
-          attempted: 1,
-          sent: 0,
-          failed: 1,
-          disabledInvalidTokens: 0,
-          failures: [
-            error instanceof Error ? error.message : "unknown-push-error",
-          ],
-        };
+      if (user.pushNotificationsEnabled === true) {
+        try {
+          push = await sendPushNotification({
+            userId,
+            characterId,
+            characterName,
+            message,
+          });
+        } catch (error) {
+          push = {
+            attempted: 1,
+            sent: 0,
+            failed: 1,
+            disabledInvalidTokens: 0,
+            failures: [
+              error instanceof Error ? error.message : "unknown-push-error",
+            ],
+          };
+        }
       }
 
       results.push({

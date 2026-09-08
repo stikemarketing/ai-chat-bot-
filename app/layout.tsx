@@ -4,16 +4,16 @@ import SiteChrome from "@/components/SiteChrome";
 
 export const metadata: Metadata = {
   title: {
-    default: "AI Companion",
-    template: "%s | AI Companion",
+    default: "Close Too You",
+    template: "%s | Close Too You",
   },
   description:
     "A luxury AI companion experience with private, personality-led conversations.",
   manifest: "/manifest.json",
-  applicationName: "AI Companion",
+  applicationName: "Close Too You",
   appleWebApp: {
     capable: true,
-    title: "AI Companion",
+    title: "Close Too You",
     statusBarStyle: "default",
   },
   formatDetection: {
@@ -57,7 +57,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
-      <body className="bg-[#f7eeee] text-[#111111] antialiased">
+      <body className="luxury-interface bg-[#f7eeee] text-[#111111] antialiased">
         <SiteChrome>{children}</SiteChrome>
       </body>
     </html>

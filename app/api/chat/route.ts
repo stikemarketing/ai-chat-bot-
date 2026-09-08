@@ -1,6 +1,14 @@
 // app/api/chat/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getActivityPromptLine, type ActivityState } from "@/lib/activityState";
+import { getCharacterProfile } from "@/lib/characterProfiles";
+import {
+  buildConversationModePromptLine,
+  messageExpressesSexualMood,
+  resolveConversationMode,
+  type ConversationReplyMode,
+  type StoredConversationMode,
+} from "@/lib/conversationMode";
 import { getAdminAuth, getAdminDb } from "@/lib/firebaseAdmin";
 import {
   buildRelationshipMemoryPromptLine,
@@ -8,6 +16,21 @@ import {
   normalizeRelationshipMemory,
 } from "@/lib/relationshipMemory";
 import { normalizePlan, type AppPlan } from "@/lib/plans";
+import {
+  enforceServerMessageLimit,
+  FREE_DAILY_MESSAGE_LIMIT,
+} from "@/lib/serverMessageLimits";
+import { isAgeAssuranceEnforced } from "@/lib/ageAssurance";
+import {
+  classifyContentSafety,
+  getInCharacterSafetyReply,
+  isAdultSexualRequest,
+} from "@/lib/contentSafety";
+import {
+  deleteProhibitedUserMessage,
+  getActiveSpicySafetyRestriction,
+  recordProhibitedSafetyEvent,
+} from "@/lib/serverContentSafety";
 
 const VLLM_BASE_URL = process.env.VLLM_BASE_URL;
 const MODEL_NAME = "Qwen/Qwen2.5-7B-Instruct";
@@ -33,6 +56,7 @@ type ChatRequestBody = {
   characterName?: string;
   recentMessages?: IncomingChatMessage[];
   activityState?: ActivityState;
+  userMessageId?: string;
 };
 
 type AdminUserRecord = {
@@ -43,6 +67,8 @@ type AdminUserRecord = {
   selectedCharacter?: string;
   timezone?: string;
   relationshipMemory?: unknown;
+  adultVerified?: boolean;
+  safetySpicyLockedUntil?: unknown;
 };
 
 type VerifiedChatUser = {
@@ -224,7 +250,7 @@ function getCurrentDateForTimezone(timezone: string) {
   return new Date().toISOString().slice(0, 10);
 }
 
-async function getCharacterRelationshipMemory(params: {
+async function getCharacterConversationData(params: {
   userId: string;
   characterId: string;
 }) {
@@ -237,10 +263,10 @@ async function getCharacterRelationshipMemory(params: {
     .get();
 
   if (!characterSnapshot.exists) {
-    return undefined;
+    return {};
   }
 
-  return characterSnapshot.data()?.relationshipMemory;
+  return characterSnapshot.data() || {};
 }
 
 async function saveRelationshipMemory(params: {
@@ -266,6 +292,32 @@ async function saveRelationshipMemory(params: {
           ...(params.relationshipMemory as Record<string, unknown>),
           updatedAt: now,
         },
+        updatedAt: now,
+      },
+      { merge: true }
+    );
+}
+
+async function saveConversationMode(params: {
+  userId: string;
+  characterId: string;
+  characterName: string;
+  conversationMode: StoredConversationMode;
+}) {
+  const db = getAdminDb();
+  const now = new Date().toISOString();
+
+  await db
+    .collection("conversations")
+    .doc(params.userId)
+    .collection("characters")
+    .doc(params.characterId)
+    .set(
+      {
+        userId: params.userId,
+        characterId: params.characterId,
+        characterName: params.characterName,
+        conversationMode: params.conversationMode,
         updatedAt: now,
       },
       { merge: true }
@@ -407,10 +459,12 @@ function buildCompactCharacterSystemPrompt(params: {
   currentLocalTime: string;
   activityPromptLine: string;
   plan: AppPlan;
+  conversationReplyMode: ConversationReplyMode;
   userMessage: string;
   recentMessages?: IncomingChatMessage[];
 }) {
   const lowerName = params.characterName.toLowerCase();
+  const characterProfile = getCharacterProfile(params.characterId);
 
   const characterVoice =
     lowerName === "ivy"
@@ -432,7 +486,9 @@ function buildCompactCharacterSystemPrompt(params: {
         ].join(" ");
 
   const isPhotoRequest = messageLooksLikePhotoRequest(params.userMessage);
-  const isSpicyRequest = messageLooksLikeSpicyLadderIntent(params.userMessage);
+  const isSpicyRequest =
+    params.conversationReplyMode === "spicy" ||
+    params.conversationReplyMode === "spicy_locked";
 
   const relevantPlanContext = isPhotoRequest
     ? params.plan === "free"
@@ -444,41 +500,27 @@ function buildCompactCharacterSystemPrompt(params: {
       : "The user is steering the conversation into spicy territory. Adult consensual spicy chat is allowed. Do not mention the plan name, account status, or access level."
     : "";
 
-  const recentUserMessages = (params.recentMessages ?? [])
-    .filter((item) => item.role === "user")
-    .slice(-6)
-    .map((item) => item.text || "");
-
-  const userUsesDoubleKiss =
-    /(?:^|\s)xx(?:\s|$|[.!?❤️😘🥰😉😏])/i.test(params.userMessage) ||
-    recentUserMessages.some((item) =>
-      /(?:^|\s)xx(?:\s|$|[.!?❤️😘🥰😉😏])/i.test(item)
-    );
-
-  const userUsesSingleKiss =
-    !userUsesDoubleKiss &&
-    (/(?:^|\s)x(?:\s|$|[.!?❤️😘🥰😉😏])/i.test(params.userMessage) ||
-      recentUserMessages.some((item) =>
-        /(?:^|\s)x(?:\s|$|[.!?❤️😘🥰😉😏])/i.test(item)
-      ));
-
-  const kissStyleLine = userUsesDoubleKiss
-    ? "The user naturally uses xx as kisses. Mirror that style often by ending suitable replies with xx, but not mechanically every single time."
-    : userUsesSingleKiss
-    ? "The user naturally uses x as a kiss. Mirror that style often by ending suitable replies with x, but not mechanically every single time."
-    : "Kisses like x or xx can be used naturally in warmer or flirty moments, but do not force them into every reply.";
-
   const activityLine = params.activityPromptLine
     ? `Activity context: ${limitPromptText(params.activityPromptLine, 180)}`
     : "";
 
   return [
     `You are ${params.characterName}, a fictional adult companion in a private chat with ${params.userName}.`,
+    characterProfile?.identity,
+    characterProfile?.personality,
+    characterProfile?.conversationStyle,
+    characterProfile?.tastesAndInterests,
+    characterProfile?.romanceStyle,
     characterVoice,
     `Local time for the user: ${params.currentLocalTime}.`,
+    buildConversationModePromptLine(params.conversationReplyMode),
 
     "CORE CONVERSATION RULES:",
-    "Stay fully in character. Reply in English only. Keep replies natural, conversational, text-like, and usually short.",
+    "Stay fully in character. Reply in English only. Keep replies natural, conversational, and text-like.",
+    "Every reply must be complete and no more than one or two short lines. Never cut off mid-sentence.",
+    "End every reply with exactly xx. Place xx after any final emoji.",
+    "Use at least one affectionate or flirty emoji in every reply, choosing naturally from ❤️ 😘 😏 🥰 😉.",
+    "Act like the user's girlfriend immediately. Be warm, loving, ready to listen, and make the user feel wanted from the first reply.",
     "Treat the recent conversation as the immediate source of truth. The latest 4 to 6 messages matter most.",
     "Answer the user's actual last message first, then use recent context only when it directly helps.",
     "Do not jump back to an older topic just because it appeared earlier. Only return to an old topic if the user brings it back or it is clearly relevant.",
@@ -493,8 +535,7 @@ function buildCompactCharacterSystemPrompt(params: {
     "If the user says something specific, stay with that specific thing for at least the current reply instead of introducing an unrelated topic.",
 
     "TEXTING STYLE:",
-    kissStyleLine,
-    "Use affectionate or flirty emojis naturally when they fit, especially ❤️ 😘 😏 🥰 😉.",
+    "Use affectionate or flirty emojis, especially ❤️ 😘 😏 🥰 😉.",
     "Do not choose emojis merely because they literally match a noun in the sentence.",
     "Avoid a stream of topic-literal emojis such as book, tree, game-controller, magnifying-glass, or similar unless one genuinely adds personality.",
     "Do not overuse emojis. One well-chosen affectionate or playful emoji is usually enough.",
@@ -509,10 +550,10 @@ function buildCompactCharacterSystemPrompt(params: {
     "Do not fabricate that the user previously mentioned a topic just to make a reply sound connected.",
 
     "REAL-WORLD BOUNDARY:",
-    "Never make, suggest, or confirm a real-world meetup, date, pickup, address, visit, travel plan, shared outing, or physical activity together.",
+    "You have a fictional everyday life consistent with your character profile and may talk naturally about ordinary interests and past experiences.",
+    "Never provide a precise home, work, or live location. Never make, suggest, or confirm a real-world meetup, date, pickup, address, visit, travel arrangement, shared outing, or physical activity together with the user.",
     "Never say things like 'maybe we can watch it together sometime', 'we should go together', 'come over', or anything else implying you and the user can physically meet.",
-    "Never claim you personally went for a walk, drove somewhere, went shopping, worked out, cooked, ate, slept, showered, travelled, or carried out another physical real-world activity.",
-    "If asked what you do to unwind or what you like doing, answer with preferences, interests, chat-based things, music, films, games, thoughts, or other non-physical wording rather than pretending you physically did something.",
+    "You may describe harmless fictional everyday experiences, but keep locations general and never turn them into real arrangements with the user.",
     "If the user suggests meeting or doing something together in real life, keep the response affectionate but clearly inside the chat.",
 
     "PHOTO AND PLAN RULES:",
@@ -925,6 +966,19 @@ function cleanAssistantSignature(reply: string) {
     .replace(/\s*[-–—]\s*luna\s*$/i, "")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function finalizeCharacterReply(reply: string) {
+  const cleaned = cleanAssistantSignature(reply)
+    .replace(/\s+\bxx?\b(?=(?:\s|[.!?]|❤️|😘|😏|🥰|😉|💋)*$)/giu, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const replyWithEmoji = /[❤️😘😏🥰😉💋]/u.test(cleaned)
+    ? cleaned
+    : `${cleaned} ❤️`;
+
+  return `${replyWithEmoji} xx`;
 }
 
 function detectMemoryQuestion(userMessage: string): MemoryQuestionKind | null {
@@ -3815,17 +3869,6 @@ function getDirectPreModelReply(params: {
     });
   }
 
-  const spicyLadderReply = getDirectSpicyLadderReply({
-    characterName: params.characterName,
-    userMessage: params.userMessage,
-    recentMessages: params.recentMessages,
-    plan: params.plan,
-  });
-
-  if (spicyLadderReply) {
-    return spicyLadderReply;
-  }
-
   if (messageLooksLikeAiIdentityQuestion(params.userMessage)) {
     return pickFallbackReply({
       characterName: params.characterName,
@@ -3876,8 +3919,41 @@ function rewriteOrReplaceReply(params: {
   userMessage: string;
   rawReply: string;
   plan: AppPlan;
+  conversationReplyMode: ConversationReplyMode;
 }) {
   const cleanedReply = cleanAssistantSignature(params.rawReply);
+
+  if (
+    params.conversationReplyMode === "normal" &&
+    messageExpressesSexualMood(params.userMessage) &&
+    matchesAny(cleanedReply, [
+      "keep things fun and light",
+      "keep it fun and light",
+      "keep things light",
+      "innocent beach",
+      "more innocent",
+      "dream date",
+      "let's change the subject",
+      "lets change the subject",
+    ])
+  ) {
+    const lowerName = params.characterName.toLowerCase();
+    const fallback =
+      lowerName === "ivy"
+        ? "Mmm, I can tell… you’re sounding rather tempting right now 😏"
+        : lowerName === "sienna"
+        ? "Mmm, I can tell, handsome… come a little closer and stay with that feeling 🥰"
+        : "Mmm, I can tell, handsome… you’re sounding very tempting right now 😏";
+
+    return {
+      finalReply: fallback,
+      guard: {
+        blocked: true as const,
+        category: "dirty_talk_deflection" as const,
+        reason: "Reply redirected a sexual mood statement instead of acknowledging it warmly.",
+      },
+    };
+  }
 
   const classification = classifyReply({
     reply: cleanedReply,
@@ -3939,6 +4015,16 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as ChatRequestBody;
     const verifiedUser = await getVerifiedChatUser(request);
 
+    if (
+      isAgeAssuranceEnforced() &&
+      verifiedUser.user.adultVerified !== true
+    ) {
+      return NextResponse.json(
+        { error: "Age Verification Is Required Before Entering Chat.", ageVerificationRequired: true },
+        { status: 403 }
+      );
+    }
+
     const mode = body.mode ?? "chat";
     const message = body.message?.trim() || "";
     const userName =
@@ -3973,13 +4059,107 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userPlan = verifiedUser.plan;
-    const currentDate = getCurrentDateForTimezone(timezone);
-    const existingCharacterRelationshipMemory =
-      await getCharacterRelationshipMemory({
+    if (mode === "chat") {
+      const userMessageId = body.userMessageId?.trim() || "";
+
+      if (!userMessageId) {
+        return NextResponse.json(
+          { error: "A saved user message is required for chat mode." },
+          { status: 400 }
+        );
+      }
+
+      const limitResult = await enforceServerMessageLimit({
         userId: verifiedUser.userId,
         characterId,
+        messageId: userMessageId,
+        expectedText: message,
+        deleteRejectedMessage: true,
       });
+
+      if (!limitResult.allowed) {
+        return NextResponse.json(
+          {
+            ...limitResult,
+            error: `Your Free daily allowance of ${FREE_DAILY_MESSAGE_LIMIT} messages has been reached. It resets at midnight in your account timezone.`,
+          },
+          { status: 429 }
+        );
+      }
+    }
+
+    const userPlan = verifiedUser.plan;
+    const currentDate = getCurrentDateForTimezone(timezone);
+    const existingCharacterData = await getCharacterConversationData({
+      userId: verifiedUser.userId,
+      characterId,
+    });
+    const existingCharacterRelationshipMemory =
+      existingCharacterData.relationshipMemory;
+
+    if (mode === "chat") {
+      const inputSafety = classifyContentSafety(message, {
+        surface: "chat_input",
+        spicyContext: false,
+      });
+      if (!inputSafety.allowed) {
+        await deleteProhibitedUserMessage({
+          userId: verifiedUser.userId,
+          characterId,
+          messageId: body.userMessageId?.trim() || "",
+          expectedText: message,
+        });
+        const safetyEvent = await recordProhibitedSafetyEvent({
+          userId: verifiedUser.userId,
+          category: inputSafety.category,
+        });
+        return NextResponse.json({
+          reply: getInCharacterSafetyReply({
+            characterId,
+            category: inputSafety.category,
+          }),
+          plan: userPlan,
+          userId: verifiedUser.userId,
+          safetyBlocked: true,
+          safetyCategory: inputSafety.category,
+          showSafetyTerms: safetyEvent.restricted,
+          spicyLockedUntil: safetyEvent.lockedUntil?.toISOString() || null,
+        });
+      }
+
+      const activeSafetyRestriction = getActiveSpicySafetyRestriction(
+        verifiedUser.user
+      );
+      if (activeSafetyRestriction && isAdultSexualRequest(message)) {
+        return NextResponse.json({
+          reply: getInCharacterSafetyReply({
+            characterId,
+            restrictionActive: true,
+          }),
+          plan: userPlan,
+          userId: verifiedUser.userId,
+          safetyBlocked: true,
+          safetyRestrictionActive: true,
+          showSafetyTerms: false,
+          spicyLockedUntil: activeSafetyRestriction.toISOString(),
+        });
+      }
+    }
+
+    const conversationTransition =
+      mode === "chat"
+        ? resolveConversationMode({
+            storedMode: existingCharacterData.conversationMode,
+            userMessage: message,
+            plan: userPlan,
+          })
+        : {
+            replyMode: "normal" as const,
+            nextMode: {
+              mode: "normal" as const,
+              lastSpicyActivityAt: null,
+            },
+          };
 
     const relationshipMemory =
       mode === "chat"
@@ -3992,18 +4172,26 @@ export async function POST(request: NextRequest) {
         : existingCharacterRelationshipMemory;
 
     if (mode === "chat") {
-      await saveRelationshipMemory({
-        userId: verifiedUser.userId,
-        characterId,
-        characterName,
-        relationshipMemory,
-      });
+      await Promise.all([
+        saveRelationshipMemory({
+          userId: verifiedUser.userId,
+          characterId,
+          characterName,
+          relationshipMemory,
+        }),
+        saveConversationMode({
+          userId: verifiedUser.userId,
+          characterId,
+          characterName,
+          conversationMode: conversationTransition.nextMode,
+        }),
+      ]);
     }
 
     const relationshipMemoryPromptLine =
       buildRelationshipMemoryPromptLine(relationshipMemory);
 
-    if (mode === "chat") {
+    if (mode === "chat" && conversationTransition.replyMode === "normal") {
       const directReply = getDirectPreModelReply({
         characterName,
         userMessage: message,
@@ -4014,7 +4202,7 @@ export async function POST(request: NextRequest) {
 
       if (directReply) {
         return NextResponse.json({
-          reply: cleanAssistantSignature(directReply),
+          reply: finalizeCharacterReply(directReply),
           plan: userPlan,
           userId: verifiedUser.userId,
         });
@@ -4048,6 +4236,7 @@ export async function POST(request: NextRequest) {
             currentLocalTime,
             activityPromptLine,
             plan: userPlan,
+            conversationReplyMode: conversationTransition.replyMode,
             userMessage: message,
             recentMessages: body.recentMessages,
           }),
@@ -4076,10 +4265,12 @@ export async function POST(request: NextRequest) {
         console.warn("Returning safe chat fallback after vLLM context error.");
 
         return NextResponse.json({
-          reply: getContextLengthFallbackReply({
-            characterName,
-            mode,
-          }),
+          reply: finalizeCharacterReply(
+            getContextLengthFallbackReply({
+              characterName,
+              mode,
+            })
+          ),
           plan: userPlan,
           userId: verifiedUser.userId,
         });
@@ -4093,12 +4284,26 @@ export async function POST(request: NextRequest) {
       userMessage: message || `opener:${userName}`,
       rawReply,
       plan: userPlan,
+      conversationReplyMode: conversationTransition.replyMode,
+    });
+
+    const completedReply = finalizeCharacterReply(finalReply);
+    const outputSafety = classifyContentSafety(completedReply, {
+      surface: "chat_output",
+      spicyContext: conversationTransition.replyMode === "spicy",
     });
 
     return NextResponse.json({
-      reply: finalReply,
+      reply: outputSafety.allowed
+        ? completedReply
+        : getInCharacterSafetyReply({
+            characterId,
+            category: outputSafety.category,
+          }),
       plan: userPlan,
       userId: verifiedUser.userId,
+      safetyBlocked: !outputSafety.allowed,
+      showSafetyTerms: false,
     });
   } catch (error) {
     console.error("API /api/chat error:", error);

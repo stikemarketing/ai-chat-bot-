@@ -10,6 +10,7 @@ import {
   type StoredUser,
 } from "@/lib/user";
 import { getPlanDefinition, normalizePlan } from "@/lib/plans";
+import AccountDeletionPanel from "@/components/AccountDeletionPanel";
 
 type CancelSubscriptionResponse = {
   ok?: boolean;
@@ -470,7 +471,7 @@ export default function AppAccountPage() {
             <div className="space-y-2 text-sm leading-6 text-black/65">
               <p>
                 Account:{" "}
-                <span className="font-bold text-black">
+                <span className="preserve-case font-bold text-black">
                   {user.email || user.name || "Current user"}
                 </span>
               </p>
@@ -642,6 +643,22 @@ export default function AppAccountPage() {
             </Link>
           </section>
         )}
+
+        <section className="mt-5 rounded-[1.75rem] border border-[#c1123f]/10 bg-white p-5">
+          <h2 className="text-xl tracking-[-0.03em] text-black">Billing Support</h2>
+          <p className="mt-3 text-sm leading-7 text-black/62">
+            For A Duplicate Charge, Refund Question, Or Billing Problem, Email{" "}
+            <a className="preserve-case text-[#b10f38]" href="mailto:digitalstrikesupport@gmail.com">
+              digitalstrikesupport@gmail.com
+            </a>
+            . Do Not Send Passwords Or Full Payment-Card Details.
+          </p>
+          <Link className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#b10f38] px-5 py-3 text-sm text-white" href="/refunds-cancellation">
+            Read The Refund And Cancellation Policy
+          </Link>
+        </section>
+
+        <AccountDeletionPanel />
 
         <div className="mt-6 flex flex-col gap-3">
           <Link

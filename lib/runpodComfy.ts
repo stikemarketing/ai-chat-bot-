@@ -409,7 +409,7 @@ async function comfyFetchJson<T>(path: string, init?: RequestInit): Promise<T> {
       "Content-Type": "application/json",
       Origin: serverUrl,
       Referer: `${serverUrl}/`,
-      "User-Agent": "AI Companion RunPod ComfyUI",
+      "User-Agent": "Close Too You RunPod ComfyUI",
       ...(init?.headers || {}),
     },
     cache: "no-store",

@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import CharacterSwitchPanel from "@/components/CharacterSwitchPanel";
+import AccountDeletionPanel from "@/components/AccountDeletionPanel";
 import { auth } from "@/firebase/config";
 import {
   getUserWithFirestoreFallback,
@@ -290,7 +292,7 @@ export default function AppUpgradePage() {
 
             <p>
               Account:{" "}
-              <span className="text-black">
+              <span className="preserve-case text-black">
                 {user?.email || user?.name || "Not signed in"}
               </span>
             </p>
@@ -311,6 +313,12 @@ export default function AppUpgradePage() {
             </p>
           ) : null}
         </section>
+
+        {user ? (
+          <div className="mt-5">
+            <CharacterSwitchPanel source="app" />
+          </div>
+        ) : null}
 
         <section className="mt-5 space-y-4">
           {Object.values(PLAN_DEFINITIONS).map((plan) => {
@@ -358,6 +366,12 @@ export default function AppUpgradePage() {
                 <p className="mt-2 text-xs leading-6 text-black/45">
                   {getPlanSubNote(plan.id)}
                 </p>
+
+                {checkoutPlan ? (
+                  <p className="mt-2 text-xs leading-6 text-black/50">
+                    Renews Automatically Every Month Until Cancelled.
+                  </p>
+                ) : null}
 
                 <div className="mt-4 rounded-[1.35rem] border border-[#c1123f]/10 bg-white/65 p-4">
                   <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#c1123f]">
@@ -434,6 +448,16 @@ export default function AppUpgradePage() {
             );
           })}
         </section>
+
+        <p className="mt-5 text-center text-xs leading-6 text-black/48">
+          Paid Plans Renew Monthly Until Cancelled. Read Our{" "}
+          <Link className="text-[#b10f38]" href="/refunds-cancellation">
+            Refund And Cancellation Policy
+          </Link>
+          .
+        </p>
+
+        {user ? <AccountDeletionPanel /> : null}
 
 
         <div className="h-8" />

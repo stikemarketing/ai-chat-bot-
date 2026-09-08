@@ -8,6 +8,7 @@ import {
   normalizePlan,
   type AppPlan,
 } from "@/lib/plans";
+import { isAgeAssuranceEnforced } from "@/lib/ageAssurance";
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
 const MAX_HOURLY_COMPANION_MESSAGES_PER_DAY = 4;
@@ -30,6 +31,7 @@ type CronUserRecord = {
   lastHourlyCompanionMessageAt?: Timestamp;
   hourlyCompanionMessageDate?: string;
   hourlyCompanionMessagesSentToday?: number;
+  adultVerified?: boolean;
 };
 
 type PushTokenRecord = {
@@ -589,11 +591,24 @@ export async function GET(request: NextRequest) {
     const adminDb = getAdminDb();
     const now = new Date();
     const nowMs = now.getTime();
+    const onlyUserId = request.nextUrl.searchParams.get("userId")?.trim() || "";
+    const forceSend =
+      Boolean(onlyUserId) && request.nextUrl.searchParams.get("force") === "true";
+    const userDocs = [];
 
-    const usersSnapshot = await adminDb
-      .collection("users")
-      .limit(MAX_USERS_PER_RUN)
-      .get();
+    if (onlyUserId) {
+      const userDoc = await adminDb.collection("users").doc(onlyUserId).get();
+
+      if (userDoc.exists) {
+        userDocs.push(userDoc);
+      }
+    } else {
+      const usersSnapshot = await adminDb
+        .collection("users")
+        .limit(MAX_USERS_PER_RUN)
+        .get();
+      userDocs.push(...usersSnapshot.docs);
+    }
 
     const results = {
       checked: 0,
@@ -612,13 +627,23 @@ export async function GET(request: NextRequest) {
       }>,
     };
 
-    for (const userDoc of usersSnapshot.docs) {
+    for (const userDoc of userDocs) {
       results.checked += 1;
 
       try {
         const user = userDoc.data() as CronUserRecord;
         const userId = user.id || userDoc.id;
         const characterId = getSafeCharacterId(user.selectedCharacter);
+
+        if (isAgeAssuranceEnforced() && user.adultVerified !== true) {
+          results.skipped += 1;
+          results.details.push({
+            userId,
+            status: "skipped",
+            reason: "age-verification-required",
+          });
+          continue;
+        }
 
         if (!userId) {
           results.skipped += 1;
@@ -672,7 +697,7 @@ export async function GET(request: NextRequest) {
           continue;
         }
 
-        if (!hasBeenAwayForAtLeastOneHour(user, nowMs)) {
+        if (!forceSend && !hasBeenAwayForAtLeastOneHour(user, nowMs)) {
           results.skipped += 1;
           results.details.push({
             userId,
@@ -682,7 +707,7 @@ export async function GET(request: NextRequest) {
           continue;
         }
 
-        if (hasReceivedHourlyMessageRecently(user, nowMs)) {
+        if (!forceSend && hasReceivedHourlyMessageRecently(user, nowMs)) {
           results.skipped += 1;
           results.details.push({
             userId,
@@ -694,7 +719,7 @@ export async function GET(request: NextRequest) {
 
         const timezone = getUserTimezone(user.timezone);
 
-        if (!isInsideHourlyMessageWindow(timezone, now)) {
+        if (!forceSend && !isInsideHourlyMessageWindow(timezone, now)) {
           results.skipped += 1;
           results.details.push({
             userId,
@@ -710,7 +735,10 @@ export async function GET(request: NextRequest) {
           localDateKey,
         });
 
-        if (sentTodayCount >= MAX_HOURLY_COMPANION_MESSAGES_PER_DAY) {
+        if (
+          !forceSend &&
+          sentTodayCount >= MAX_HOURLY_COMPANION_MESSAGES_PER_DAY
+        ) {
           results.skipped += 1;
           results.details.push({
             userId,

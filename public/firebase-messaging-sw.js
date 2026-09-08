@@ -16,7 +16,7 @@ const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
   const notificationTitle =
-    payload.notification?.title || payload.data?.title || "AI Companion";
+    payload.notification?.title || payload.data?.title || "Close Too You";
 
   const notificationOptions = {
     body:

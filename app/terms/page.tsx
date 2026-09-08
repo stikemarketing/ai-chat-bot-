@@ -1,5 +1,6 @@
 // app/terms/page.tsx
 import Link from "next/link";
+import { PROHIBITED_CONTENT_RULES } from "@/lib/contentSafety";
 
 export default function TermsPage() {
   return (
@@ -24,7 +25,7 @@ export default function TermsPage() {
           </h1>
 
           <p className="mt-4 text-base leading-8 text-black/65">
-            Effective date: 4 May 2026
+            Effective date: 30 August 2026
           </p>
 
           <div className="mt-8 space-y-8 text-base leading-8 text-black/68">
@@ -33,7 +34,7 @@ export default function TermsPage() {
                 1. Overview
               </h2>
               <p className="mt-2">
-                These Terms of Service govern access to and use of AI Companion.
+                These Terms of Service govern access to and use of Close Too You.
                 By using the app, you agree to these terms.
               </p>
             </section>
@@ -43,7 +44,7 @@ export default function TermsPage() {
                 2. Service description
               </h2>
               <p className="mt-2">
-                AI Companion is a subscription-based AI chat product that allows
+                Close Too You is a subscription-based AI chat product that allows
                 users to interact with AI companion characters through a web app.
                 Features may change over time.
               </p>
@@ -65,10 +66,19 @@ export default function TermsPage() {
                 4. Paid subscriptions
               </h2>
               <p className="mt-2">
-                Some features may require a paid subscription. Pricing, billing
-                terms, and renewal behaviour may be shown at checkout.
-                Subscription payments are processed by third-party payment
-                providers such as Stripe.
+                Pro And Unlimited Are Monthly Subscriptions Charged When They
+                Begin And Automatically Renewed On The User&apos;s Billing Date Until
+                Cancelled. Cancellation Stops Future Renewals, While Paid Access
+                Normally Continues Until The End Of The Current Paid Period.
+                Failed Subscriptions May Return To Free. Subscription Payments
+                Are Generally Non-Refundable Once Paid Access Begins, Except Where
+                Required By Law Or Where A Duplicate Or Incorrect Charge Is
+                Confirmed. Payments Are Processed By An Approved Third-Party
+                Payment Provider. Read The Full{" "}
+                <Link className="text-[#c1123f]" href="/refunds-cancellation">
+                  Refund And Cancellation Policy
+                </Link>
+                .
               </p>
             </section>
 
@@ -86,6 +96,27 @@ export default function TermsPage() {
                 <p>• attempt unauthorised access to accounts, systems, or data</p>
                 <p>• use the app in violation of applicable laws or regulations</p>
               </div>
+            </section>
+
+            <section id="prohibited-content" className="scroll-mt-24">
+              <h2 className="text-xl font-semibold tracking-tight text-black">
+                Prohibited Adult Content
+              </h2>
+              <p className="mt-2">
+                Consensual Adult Conversation With A Fictional Adult Companion
+                May Be Available On Eligible Plans. The Following Content Is
+                Not Allowed:
+              </p>
+              <ul className="mt-3 space-y-2">
+                {PROHIBITED_CONTENT_RULES.map((rule) => (
+                  <li key={rule}>• {rule}</li>
+                ))}
+              </ul>
+              <p className="mt-3">
+                Prohibited Requests Are Blocked. Three Prohibited Requests
+                Within 24 Hours Temporarily Disable Spicy Chat And Spicy Images
+                For 24 Hours. Normal Companion Chat Remains Available.
+              </p>
             </section>
 
             <section>
@@ -114,7 +145,7 @@ export default function TermsPage() {
                 8. Limitation of liability
               </h2>
               <p className="mt-2">
-                To the maximum extent permitted by law, AI Companion is provided
+                To the maximum extent permitted by law, Close Too You is provided
                 on an “as is” and “as available” basis without warranties of any
                 kind. We are not liable for indirect, incidental, or
                 consequential losses arising from use of the service.
@@ -123,11 +154,44 @@ export default function TermsPage() {
 
             <section>
               <h2 className="text-xl font-semibold tracking-tight text-black">
-                9. Contact
+                9. Account Deletion
+              </h2>
+              <p className="mt-2">
+                A Signed-In User May Permanently Delete Their Account From The
+                Plans Or Billing Page. Deletion Is Immediate And Irreversible.
+                Any Active Subscription Is Cancelled Immediately, Remaining Paid
+                Access Ends, The User Is Signed Out, And Associated Account Data,
+                Conversations, Messages, Settings, Usage Records, Push Tokens,
+                And Stored Account Files Are Deleted.
+              </p>
+              <p className="mt-3">
+                Immediate Account Deletion Does Not Normally Provide A Refund
+                For Remaining Paid Time, Except Where Required By Law. Users Who
+                Want To Keep Access Until The End Of The Current Paid Period
+                Should Cancel The Subscription First And Delete The Account Once
+                It Has Returned To Free.
+              </p>
+              <p className="mt-3">
+                Limited Records May Be Retained Where Required For Legal, Tax,
+                Accounting, Fraud-Prevention, Safety, Dispute, Or Regulatory
+                Purposes. Third-Party Payment Providers May Retain Transaction
+                Records Under Their Own Legal Duties And Policies.
+              </p>
+              <Link
+                className="mt-5 inline-flex min-h-12 items-center justify-center rounded-full bg-[#b10f38] px-6 py-3 text-sm text-white"
+                href="/upgrade"
+              >
+                Open Plans And Account Controls
+              </Link>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold tracking-tight text-black">
+                10. Contact
               </h2>
               <p className="mt-2">For support or legal questions, contact:</p>
               <p className="mt-2 break-all font-semibold text-[#c1123f]">
-                digitalstrikemarketing@outlook.com
+                digitalstrikesupport@gmail.com
               </p>
             </section>
           </div>

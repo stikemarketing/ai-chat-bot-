@@ -19,6 +19,7 @@ import {
 } from "@/firebase/users";
 import {
   countMessagesFromFirestore,
+  enforceMessageLimitWithServer,
   getMessagesFromFirestore,
   saveMessageToFirestore,
   type ChatMessage,
@@ -38,6 +39,7 @@ import TypingBubble from "@/components/TypingBubble";
 import { getFreeImageReply } from "@/lib/freeImageReplies";
 import { getImageLimitReply } from "@/lib/imageLimitReplies";
 import { getWelcomeOpener } from "@/lib/welcomeOpeners";
+import SafetyTermsModal from "@/components/SafetyTermsModal";
 
 const ASSISTANT_TYPING_DELAY_MS = 8000;
 const ASSISTANT_MESSAGE_DELAY_MS = 8000;
@@ -50,6 +52,9 @@ const BUSY_STATE_RECOVERY_MS = 210_000;
 type ChatApiResponse = {
   reply?: string;
   error?: string;
+  safetyBlocked?: boolean;
+  showSafetyTerms?: boolean;
+  spicyLockedUntil?: string | null;
 };
 
 type ImageGenerateApiResponse = {
@@ -63,6 +68,17 @@ type ImageGenerateApiResponse = {
   dailyLimit?: number | null;
   remainingToday?: number | null;
   paidNormalImageCredits?: number;
+  reply?: string;
+  safetyBlocked?: boolean;
+  showSafetyTerms?: boolean;
+  spicyLockedUntil?: string | null;
+};
+
+type ImageUsageApiResponse = {
+  plan?: "free" | "pro" | "unlimited";
+  normalRemaining?: number | null;
+  spicyRemaining?: number | null;
+  error?: string;
 };
 
 type ApiRecentMessage = {
@@ -155,7 +171,6 @@ const imageRequestPatterns = [
   /\b(show|send|share|give)\s+(me\s+)?your\s+(outfit|look|bedroom\s+look|lingerie|underwear|robe)\b/,
   /\b(can|could|would|will)\s+(you|u)\s+(send|show|share|give)\s+(me\s+)?something\s+(cute|sweet|normal|casual|pretty|spicy|sexy|hot|naughty|dirty|cheeky|revealing|teasing|tempting|bedroom|private)\b/,
   /\b(surprise\s+me|treat\s+me)\s+with\s+(something\s+)?(cute|sweet|normal|casual|pretty|spicy|sexy|hot|naughty|dirty|cheeky|revealing|teasing|tempting|bedroom|private)\b/,
-  /\b(i\s+want|id\s+like|i'd\s+like)\s+(something\s+)?(cute|sweet|normal|casual|pretty|spicy|sexy|hot|naughty|dirty|cheeky|revealing|teasing|tempting|bedroom|private)\s+(from\s+you|of\s+you)?\b/,
 ];
 
 function delay(ms: number) {
@@ -190,6 +205,39 @@ async function getFirebaseIdToken() {
   }
 
   return firebaseUser.getIdToken();
+}
+
+async function warmQwen3ChatEngine(characterId: string) {
+  if (characterId !== "luna" && characterId !== "ivy" && characterId !== "sienna") return;
+
+  try {
+    const firebaseIdToken = await getFirebaseIdToken();
+    if (!firebaseIdToken) return;
+
+    await fetch("/api/chat-v2", {
+      method: "GET",
+      headers: { Authorization: `Bearer ${firebaseIdToken}` },
+      cache: "no-store",
+    });
+  } catch {
+    // Sending a message will retry normally if the background warm-up is incomplete.
+  }
+}
+
+async function requiresAgeVerification() {
+  const firebaseUser = await waitForFirebaseAuthUser();
+  if (!firebaseUser) return false;
+  const token = await firebaseUser.getIdToken();
+  const response = await fetch("/api/age-assurance/status", {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  if (!response.ok) return true;
+  const data = (await response.json()) as {
+    adultVerified?: boolean;
+    enforced?: boolean;
+  };
+  return data.enforced === true && data.adultVerified !== true;
 }
 
 function getPlanLabel(plan: AppPlan) {
@@ -512,7 +560,7 @@ function AppMessageBubble({
 
   if (messageType === "image") {
     return (
-      <div className="flex justify-start">
+      <div className="preserve-case flex justify-start">
         <div className="max-w-[82%] rounded-[1.35rem] rounded-bl-md bg-white px-3 py-3 text-black shadow-sm ring-1 ring-black/5">
           <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-black/35">
             {characterName}
@@ -557,7 +605,11 @@ function AppMessageBubble({
   }
 
   return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
+    <div
+      className={`preserve-case flex ${
+        isUser ? "justify-end" : "justify-start"
+      }`}
+    >
       <div
         className={`max-w-[82%] break-words px-4 py-2.5 text-sm leading-6 shadow-sm [overflow-wrap:anywhere] ${
           isUser
@@ -592,6 +644,8 @@ export default function AppChatPage() {
   const [mounted, setMounted] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [messageCount, setMessageCount] = useState(0);
+  const [imageUsage, setImageUsage] =
+    useState<ImageUsageApiResponse | null>(null);
   const [isLoadingMessages, setIsLoadingMessages] = useState(true);
   const [composerValue, setComposerValue] = useState("");
   const [isSendingMessage, setIsSendingMessage] = useState(false);
@@ -605,6 +659,8 @@ export default function AppChatPage() {
   );
   const [appMenuOpen, setAppMenuOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [showSafetyTerms, setShowSafetyTerms] = useState(false);
+  const [safetyLockedUntil, setSafetyLockedUntil] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const composerTextareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -628,11 +684,24 @@ export default function AppChatPage() {
         return;
       }
 
+      if (savedUser?.id && (await requiresAgeVerification())) {
+        router.replace(
+          `/age-verification?source=app&character=${savedUser.selectedCharacter}`
+        );
+        return;
+      }
+
       setUser(savedUser);
 
       if (!savedUser?.id || !character) {
         setIsLoadingMessages(false);
         return;
+      }
+
+      void warmQwen3ChatEngine(character.id);
+
+      if (normalizePlan(savedUser.plan) === "pro") {
+        void refreshImageUsage();
       }
 
       try {
@@ -703,6 +772,29 @@ export default function AppChatPage() {
     return savedUser;
   }
 
+  async function refreshImageUsage() {
+    const firebaseIdToken = await getFirebaseIdToken();
+
+    if (!firebaseIdToken) {
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/images/usage", {
+        headers: {
+          Authorization: `Bearer ${firebaseIdToken}`,
+        },
+      });
+      const data = (await response.json()) as ImageUsageApiResponse;
+
+      if (response.ok && mountedRef.current) {
+        setImageUsage(data);
+      }
+    } catch (error) {
+      console.error("Failed to refresh app image usage:", error);
+    }
+  }
+
   async function refreshMessages(userId: string, timezone?: string) {
     if (!character) {
       return;
@@ -738,9 +830,15 @@ export default function AppChatPage() {
         return;
       }
 
-      resetBusyState();
-
       try {
+        if (
+          character?.id === "luna" ||
+          character?.id === "ivy" ||
+          character?.id === "sienna"
+        ) {
+          void warmQwen3ChatEngine(character.id);
+        }
+
         const refreshedUser = await refreshUser();
 
         if (refreshedUser?.id) {
@@ -781,7 +879,16 @@ export default function AppChatPage() {
     return () => window.clearTimeout(timeoutId);
   }, [isSendingMessage, isAssistantTyping, isGeneratingImage]);
 
+  function handleContinueChatting() {
+    setImageErrorMessage("");
+    setShowUnlimitedImageUpgradeButton(false);
+    requestAnimationFrame(() => composerTextareaRef.current?.focus());
+  }
+
   async function handleSignOut() {
+    const signOutCharacterId =
+      character?.id || user?.selectedCharacter || "luna";
+
     try {
       setIsSigningOut(true);
       clearUser();
@@ -791,14 +898,18 @@ export default function AppChatPage() {
       }
 
       setAppMenuOpen(false);
-      router.push("/signup");
+      router.push(
+        `/signup?mode=signin&character=${signOutCharacterId}&source=app`
+      );
       router.refresh();
     } catch (error) {
       console.error("Failed to sign out from app chat:", error);
 
       clearUser();
       setAppMenuOpen(false);
-      router.push("/signup");
+      router.push(
+        `/signup?mode=signin&character=${signOutCharacterId}&source=app`
+      );
       router.refresh();
     } finally {
       setIsSigningOut(false);
@@ -883,7 +994,7 @@ export default function AppChatPage() {
         <div className="mx-auto flex min-h-[70vh] w-full max-w-md items-center justify-center">
           <div className="w-full rounded-[1.75rem] border border-[#c1123f]/10 bg-white/80 p-6 text-center shadow-[0_16px_45px_rgba(111,0,23,0.05)]">
             <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#c1123f]">
-              AI Companion
+              Close Too You
             </p>
             <h1 className="mt-2 text-2xl font-bold tracking-[-0.03em] text-black">
               Opening chat
@@ -909,7 +1020,7 @@ export default function AppChatPage() {
   const isLocked = user ? user.selectedCharacter !== character.id : false;
   const imageSrc = characterImages[character.id] ?? "/companions/luna-main.png";
 
-  async function generateImageMessage(prompt: string) {
+  async function generateImageMessage(prompt: string, userMessageId: string) {
     if (!user?.id || !character) {
       return {
         ok: false,
@@ -938,6 +1049,7 @@ export default function AppChatPage() {
           characterId: character.id,
           characterName: character.name,
           prompt,
+          userMessageId,
         }),
       },
       CHAT_REQUEST_TIMEOUT_MS
@@ -955,6 +1067,7 @@ export default function AppChatPage() {
 
     await refreshMessages(user.id, user.timezone);
     await refreshUser();
+    await refreshImageUsage();
 
     return {
       ...data,
@@ -1009,13 +1122,31 @@ export default function AppChatPage() {
 
       setMessages(optimisticMessages);
 
-      await saveMessageToFirestore({
+      const userMessageId = await saveMessageToFirestore({
         userId: user.id,
         characterId: character.id,
         characterName: character.name,
         role: "user",
         text: outgoingMessage,
       });
+
+      const messageLimitResult = await enforceMessageLimitWithServer({
+        userId: user.id,
+        characterId: character.id,
+        messageId: userMessageId,
+        message: outgoingMessage,
+      });
+
+      if (!messageLimitResult.allowed) {
+        sendLockRef.current = false;
+        setIsSendingMessage(false);
+        setImageErrorMessage(
+          messageLimitResult.error ||
+            "Your Free daily message allowance has been reached."
+        );
+        await refreshMessages(user.id, user.timezone);
+        return;
+      }
 
       await recordUserChatActivity(user.id);
 
@@ -1029,8 +1160,6 @@ export default function AppChatPage() {
           });
 
         await refreshMessages(user.id, user.timezone);
-        sendLockRef.current = false;
-        setIsSendingMessage(false);
 
         await delay(ASSISTANT_TYPING_DELAY_MS);
         setIsAssistantTyping(true);
@@ -1057,29 +1186,7 @@ export default function AppChatPage() {
 
           setIsAssistantTyping(false);
           await refreshMessages(user.id, user.timezone);
-          return;
-        }
-
-        if (!canGenerateImages) {
-          await saveMessageToFirestore({
-            userId: user.id,
-            characterId: character.id,
-            characterName: character.name,
-            role: "assistant",
-            text: getFreeImageReply({
-              characterName: character.name,
-              kind: imageCooldownKind,
-              userMessage: outgoingMessage,
-              recentAssistantMessages: messages
-                .filter((message) => message.role === "assistant")
-                .map((message) => message.text || "")
-                .filter(Boolean)
-                .slice(-20),
-            }),
-          });
-
-          setIsAssistantTyping(false);
-          await refreshMessages(user.id, user.timezone);
+          resetBusyState();
           return;
         }
 
@@ -1091,9 +1198,51 @@ export default function AppChatPage() {
         setIsAssistantTyping(false);
         setIsGeneratingImage(true);
 
-        const imageResult = await generateImageMessage(outgoingMessage);
+        const imageResult = await generateImageMessage(outgoingMessage, userMessageId);
 
         if (!imageResult.ok) {
+          if (imageResult.safetyBlocked && imageResult.reply) {
+            await saveMessageToFirestore({
+              userId: user.id,
+              characterId: character.id,
+              characterName: character.name,
+              role: "assistant",
+              text: imageResult.reply,
+            });
+            setImageErrorMessage("");
+            setShowUnlimitedImageUpgradeButton(false);
+            if (imageResult.showSafetyTerms) {
+              setSafetyLockedUntil(imageResult.spicyLockedUntil || null);
+              setShowSafetyTerms(true);
+            }
+            await refreshMessages(user.id, user.timezone);
+            resetBusyState();
+            return;
+          }
+
+          if (imageResult.plan === "free" && imageResult.imageKind) {
+            await saveMessageToFirestore({
+              userId: user.id,
+              characterId: character.id,
+              characterName: character.name,
+              role: "assistant",
+              text: getFreeImageReply({
+                characterName: character.name,
+                kind: imageResult.imageKind,
+                userMessage: outgoingMessage,
+                recentAssistantMessages: messages
+                  .filter((message) => message.role === "assistant")
+                  .map((message) => message.text || "")
+                  .filter(Boolean)
+                  .slice(-20),
+              }),
+            });
+            setImageErrorMessage("");
+            await refreshMessages(user.id, user.timezone);
+            resetBusyState();
+            return;
+          }
+
           const shouldShowUnlimitedUpgrade =
             shouldShowUpgradeToUnlimitedForImageLimit(imageResult);
 
@@ -1121,9 +1270,10 @@ export default function AppChatPage() {
 
           await refreshMessages(user.id, user.timezone);
           await refreshUser();
+          await refreshImageUsage();
         }
 
-        setIsGeneratingImage(false);
+        resetBusyState();
         return;
       }
 
@@ -1134,7 +1284,11 @@ export default function AppChatPage() {
       }
 
       const response = await fetchJsonWithTimeout(
-        "/api/chat",
+        character.id === "luna" ||
+        character.id === "ivy" ||
+        character.id === "sienna"
+          ? "/api/chat-v2"
+          : "/api/chat",
         {
           method: "POST",
           headers: {
@@ -1144,6 +1298,7 @@ export default function AppChatPage() {
           body: JSON.stringify({
             mode: "chat",
             message: outgoingMessage,
+            userMessageId,
             userName: user.name,
             timezone: user.timezone,
             characterId: character.id,
@@ -1170,8 +1325,6 @@ export default function AppChatPage() {
       }
 
       await refreshMessages(user.id, user.timezone);
-      sendLockRef.current = false;
-      setIsSendingMessage(false);
 
       await delay(ASSISTANT_TYPING_DELAY_MS);
       setIsAssistantTyping(true);
@@ -1186,12 +1339,18 @@ export default function AppChatPage() {
         text: data.reply,
       });
 
+      if (data.showSafetyTerms) {
+        setSafetyLockedUntil(data.spicyLockedUntil || null);
+        setShowSafetyTerms(true);
+      }
+
       imageCooldownRef.current = recordTextChatTurnForImageCooldown(
         imageCooldownRef.current
       );
 
       setIsAssistantTyping(false);
       await refreshMessages(user.id, user.timezone);
+      resetBusyState();
     } catch (error) {
       console.error("Failed to send app chat message:", error);
       sendLockRef.current = false;
@@ -1248,10 +1407,16 @@ export default function AppChatPage() {
 
   return (
     <main className="flex h-screen min-h-[640px] flex-col bg-[#efe2df] text-[#111111]">
+      <SafetyTermsModal
+        open={showSafetyTerms}
+        lockedUntil={safetyLockedUntil}
+        onClose={() => setShowSafetyTerms(false)}
+      />
       <header className="sticky top-0 z-20 border-b border-black/5 bg-white/95 px-4 py-3 shadow-sm backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <button
+              data-ui-control="icon"
               type="button"
               aria-label={appMenuOpen ? "Close app menu" : "Open app menu"}
               aria-expanded={appMenuOpen}
@@ -1292,15 +1457,29 @@ export default function AppChatPage() {
               <h1 className="truncate text-base font-bold tracking-[-0.02em] text-black">
                 {character.name}
               </h1>
-              <p className="truncate text-xs leading-5 text-black/50">
-                Online · waiting for you
+              <p className="flex items-center gap-1.5 truncate text-xs leading-5 text-black/50">
+                <span className="h-2 w-2 shrink-0 rounded-full bg-[#22a447]" />
+                <span>Online · waiting for you</span>
               </p>
             </div>
           </div>
 
-          <span className="rounded-full bg-[#f7eeee] px-3 py-2 text-xs font-bold text-[#b10f38]">
-            {planLabel}
-          </span>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <span className="rounded-full bg-[#f7eeee] px-3 py-2 text-xs font-bold text-[#b10f38]">
+              {planLabel}
+            </span>
+
+            {effectivePlan === "pro" ? (
+              <>
+                <span className="rounded-full bg-[#f7eeee] px-2.5 py-2 text-[10px] font-bold text-[#b10f38]">
+                  Personal {imageUsage?.normalRemaining ?? "—"}/10
+                </span>
+                <span className="rounded-full bg-[#f7eeee] px-2.5 py-2 text-[10px] font-bold text-[#b10f38]">
+                  Spicy {imageUsage?.spicyRemaining ?? "—"}/3
+                </span>
+              </>
+            ) : null}
+          </div>
         </div>
       </header>
 
@@ -1328,7 +1507,7 @@ export default function AppChatPage() {
                 <p className="truncate text-sm font-bold text-black">
                   {character.name}
                 </p>
-                <p className="truncate text-xs text-black/50">
+                <p className="preserve-case truncate text-xs text-black/50">
                   {user?.email || user?.name || "Signed in"}
                 </p>
               </div>
@@ -1450,13 +1629,20 @@ export default function AppChatPage() {
               <p>{imageErrorMessage}</p>
 
               {showUnlimitedImageUpgradeButton ? (
-                <div className="mt-3">
+                <div className="mt-3 flex flex-wrap gap-2">
                   <Link
                     href="/app/upgrade"
                     className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#b10f38] px-4 py-2 text-sm font-semibold !text-white hover:bg-[#970d31]"
                   >
                     Upgrade to Unlimited
                   </Link>
+                  <button
+                    type="button"
+                    onClick={handleContinueChatting}
+                    className="inline-flex min-h-10 items-center justify-center rounded-full border border-[#c1123f]/18 bg-white px-4 py-2 text-sm font-semibold text-[#8f0d2f] transition hover:bg-[#fff9fa]"
+                  >
+                    Continue chatting
+                  </button>
                 </div>
               ) : null}
             </div>
@@ -1471,6 +1657,7 @@ export default function AppChatPage() {
           <div className="mb-2 flex gap-2 overflow-x-auto rounded-[1.25rem] bg-[#f7eeee] px-3 py-2">
             {quickEmojis.map((emoji) => (
               <button
+                data-ui-control="emoji"
                 key={emoji}
                 type="button"
                 onClick={() => handleEmojiClick(emoji)}
@@ -1492,6 +1679,7 @@ export default function AppChatPage() {
               ref={composerTextareaRef}
               value={composerValue}
               onChange={(event) => setComposerValue(event.target.value)}
+              onFocus={() => void warmQwen3ChatEngine(character.id)}
               onKeyDown={(event) => {
                 if (event.key === "Enter" && !event.shiftKey) {
                   event.preventDefault();

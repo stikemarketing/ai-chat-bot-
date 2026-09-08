@@ -332,7 +332,7 @@ export default function CheckoutSuccessPage() {
               ? "Your token pack has been added"
               : expectedPlanLabel === "paid"
               ? "Your upgrade is being activated"
-              : `You’re upgrading to ${expectedPlanLabel}`}
+              : `You’re now on ${expectedPlanLabel}`}
           </h1>
 
           <p className="mt-4 max-w-2xl text-base leading-8 text-black/65 sm:text-lg">
@@ -350,7 +350,7 @@ export default function CheckoutSuccessPage() {
               <div className="space-y-3 text-base leading-8 text-black/68">
                 <p>
                   Saved account:{" "}
-                  <span className="font-semibold text-black">
+                  <span className="preserve-case font-semibold text-black">
                     {savedUser.email || savedUser.name || "Current test user"}
                   </span>
                 </p>
