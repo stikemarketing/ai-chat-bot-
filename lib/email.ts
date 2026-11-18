@@ -20,7 +20,7 @@ function getResendClient(): Resend {
 // setup. Once a sending domain is verified in the Resend dashboard, this can
 // be swapped for something like "reports@closetooyou.com" for better
 // deliverability and branding.
-const DEFAULT_FROM_ADDRESS = "Close Too You <onboarding@resend.dev>";
+const DEFAULT_FROM_ADDRESS = "Close Too You <reports@digitalstrikemedia.com>";
 
 export async function sendEmail(params: {
   to: string;

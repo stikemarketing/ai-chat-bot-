@@ -49,6 +49,8 @@ export async function POST(request: NextRequest) {
     const location = getText(formData, "location");
     const description = getText(formData, "description");
     const screenshot = formData.get("screenshot");
+    const rawUserId = getText(formData, "userId");
+    const userId = rawUserId.length > 0 && rawUserId.length <= 128 ? rawUserId : null;
 
     if (name.length < 2 || name.length > 100) {
       return NextResponse.json(
@@ -118,6 +120,7 @@ export async function POST(request: NextRequest) {
         `Type: ${reportType}`,
         `Location: ${location}`,
         `From: ${name} <${email}>`,
+        userId ? `User ID: ${userId}` : `User ID: not logged in`,
         screenshotPath ? `Screenshot: stored at ${screenshotPath} in Firebase Storage` : `Screenshot: none`,
         ``,
         `Description:`,
@@ -128,6 +131,7 @@ export async function POST(request: NextRequest) {
     await getAdminDb().collection("supportReports").doc(reportId).set({
       name,
       email,
+      userId,
       reportType,
       location,
       description,

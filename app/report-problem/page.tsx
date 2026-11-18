@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/firebase/config";
 
 const SUPPORT_EMAIL = "digitalstrikesupport@gmail.com";
 
@@ -9,6 +11,16 @@ export default function ReportProblemPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [reportId, setReportId] = useState("");
+  const [userId, setUserId] = useState("");
+  const [accountEmail, setAccountEmail] = useState("");
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUserId(user ? user.uid : "");
+      setAccountEmail(user?.email ?? "");
+    });
+    return unsubscribe;
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -84,6 +96,8 @@ export default function ReportProblemPage() {
                 <input id="website" name="website" tabIndex={-1} autoComplete="off" />
               </div>
 
+              <input type="hidden" name="userId" value={userId} />
+
               <div className="grid gap-5 sm:grid-cols-2">
                 <label className="space-y-2 text-sm text-black/72">
                   <span>Name</span>
@@ -104,6 +118,8 @@ export default function ReportProblemPage() {
                     type="email"
                     required
                     maxLength={254}
+                    defaultValue={accountEmail}
+                    key={accountEmail}
                   />
                 </label>
               </div>

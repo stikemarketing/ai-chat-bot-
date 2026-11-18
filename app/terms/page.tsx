@@ -37,6 +37,17 @@ export default function TermsPage() {
                 These Terms of Service govern access to and use of Close Too You.
                 By using the app, you agree to these terms.
               </p>
+              <p className="mt-3">
+                Close Too You is operated by Digital Strike Media Ltd, a company
+                registered in England and Wales (company number 17565891).
+              </p>
+              <p className="mt-3">
+                Close Too You is intended solely for adults aged 18 or over. By
+                using the service, you confirm that you are at least 18 years
+                old. We use age verification measures to help confirm this, and
+                we may deny or suspend access for anyone we reasonably believe
+                does not meet this requirement.
+              </p>
             </section>
 
             <section>
@@ -187,7 +198,19 @@ export default function TermsPage() {
 
             <section>
               <h2 className="text-xl font-semibold tracking-tight text-black">
-                10. Contact
+                10. Governing law
+              </h2>
+              <p className="mt-2">
+                These Terms are governed by the laws of England and Wales. Any
+                disputes arising from these Terms or your use of the service
+                will be subject to the exclusive jurisdiction of the courts of
+                England and Wales.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold tracking-tight text-black">
+                11. Contact
               </h2>
               <p className="mt-2">For support or legal questions, contact:</p>
               <p className="mt-2 break-all font-semibold text-[#c1123f]">

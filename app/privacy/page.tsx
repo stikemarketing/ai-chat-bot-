@@ -37,6 +37,21 @@ export default function PrivacyPage() {
                 provide account access, chat functionality, subscription access,
                 and support. By using the service, you agree to this policy.
               </p>
+              <p className="mt-3">
+                Close Too You is operated by Digital Strike Media Ltd, a company
+                registered in England and Wales (company number 17565891),
+                which acts as the data controller for the personal information
+                described in this policy. The service is intended solely for
+                adults aged 18 or over.
+              </p>
+              <p className="mt-3">
+                We process your information on the following legal bases under
+                UK data protection law: performance of a contract with you (to
+                provide the service you have signed up for), our legitimate
+                interests (such as keeping the service secure and improving it),
+                compliance with a legal obligation, and, where applicable,
+                your consent.
+              </p>
             </section>
 
             <section>
@@ -95,7 +110,22 @@ export default function PrivacyPage() {
 
             <section>
               <h2 className="text-xl font-semibold tracking-tight text-black">
-                6. Sharing
+                6. International data transfers
+              </h2>
+              <p className="mt-2">
+                Some of the third-party providers we use to operate the service
+                may store or process information outside the UK. Where this
+                happens, we rely on legal safeguards recognised under UK data
+                protection law, such as the UK International Data Transfer
+                Agreement or adequacy decisions, to help ensure your
+                information continues to receive an appropriate level of
+                protection.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold tracking-tight text-black">
+                7. Sharing
               </h2>
               <p className="mt-2">
                 We do not sell personal information. We may share limited data
@@ -107,18 +137,28 @@ export default function PrivacyPage() {
 
             <section>
               <h2 className="text-xl font-semibold tracking-tight text-black">
-                7. Your choices
+                8. Your rights
               </h2>
               <p className="mt-2">
-                You may contact us to request account help, data correction, or
-                account deletion, subject to any legal or operational retention
-                requirements.
+                Under UK data protection law, you have the right to: access the
+                personal information we hold about you; request correction of
+                inaccurate information; request deletion of your information;
+                request that we restrict how we use your information; object to
+                certain processing; and request a copy of your information in a
+                portable format. These rights are subject to any legal or
+                operational retention requirements described below.
+              </p>
+              <p className="mt-3">
+                To exercise any of these rights, contact us using the details in
+                Section 10. If you are not satisfied with how we have handled
+                your information, you also have the right to complain to the
+                UK Information Commissioner&apos;s Office (ICO) at ico.org.uk.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold tracking-tight text-black">
-                8. Account And Data Deletion
+                9. Account And Data Deletion
               </h2>
               <p className="mt-2">
                 Signed-In Users Can Permanently Delete Their Account From The
@@ -146,7 +186,7 @@ export default function PrivacyPage() {
 
             <section>
               <h2 className="text-xl font-semibold tracking-tight text-black">
-                9. Contact
+                10. Contact
               </h2>
               <p className="mt-2">For privacy questions, contact:</p>
               <p className="mt-2 break-all font-semibold text-[#c1123f]">
