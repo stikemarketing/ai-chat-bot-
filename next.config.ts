@@ -10,6 +10,7 @@ export default withSentryConfig(nextConfig, {
   project: "javascript-nextjs",
   silent: true,
   widenClientFileUpload: true,
-  disableLogger: true,
-  automaticVercelMonitors: false,
+  bundleSizeOptimizations: {
+    excludeDebugStatements: true,
+  },
 });

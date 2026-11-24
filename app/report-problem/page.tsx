@@ -70,6 +70,16 @@ export default function ReportProblemPage() {
             Tell Us About Prohibited Content, A Copyright Or Likeness Concern,
             An Account Restriction, Or Another Problem With The Service.
           </p>
+          <p className="mt-2 max-w-2xl text-sm leading-7 text-black/55">
+            We Review And Respond To All Reports And Content Removal Requests
+            Within 5 Business Days. If You Disagree With Our Decision, You May
+            Request An Independent Review By A Neutral Third Party At Our
+            Expense — See Our{" "}
+            <Link className="text-[#c1123f]" href="/terms#complaints-and-appeals">
+              Complaints And Appeals Policy
+            </Link>
+            .
+          </p>
 
           {reportId ? (
             <div className="mt-8 rounded-[1.6rem] border border-[#c1123f]/10 bg-[#fff5f7] p-5">

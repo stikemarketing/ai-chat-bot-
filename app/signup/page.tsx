@@ -6,7 +6,6 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   createUserWithEmailAndPassword,
-  sendEmailVerification,
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
@@ -307,6 +306,32 @@ export default function SignupPage() {
     Boolean(existingUser?.selectedCharacter) &&
     existingUser?.selectedCharacter !== selectedCharacter.id;
 
+async function sendCustomVerificationEmail(idToken: string) {
+    try {
+      const response = await fetch("/api/auth/send-verification-email", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        const data = (await response.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        console.error(
+          "Failed to send verification email:",
+          data.error || response.statusText
+        );
+      }
+    } catch (error) {
+      // Never let an email-sending hiccup block account creation or sign-in —
+      // the user can always trigger a fresh link from the unverified-login
+      // flow below if this one fails to arrive.
+      console.error("Failed to send verification email:", error);
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -375,6 +400,11 @@ export default function SignupPage() {
             termsAccepted: true,
             privacyAccepted: true,
             aiDisclosureAccepted: true,
+            name: trimmedName,
+            email: trimmedEmail,
+            selectedCharacter: selectedCharacter.id,
+            timezone:
+              Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/London",
           }),
         });
         if (!confirmationResponse.ok) {
@@ -390,7 +420,7 @@ export default function SignupPage() {
         savePendingCharacter(selectedCharacter.id);
         savePendingName(trimmedName);
 
-        await sendEmailVerification(authResult.user);
+        await sendCustomVerificationEmail(confirmationToken);
         await signOut(auth);
         clearUser();
 
@@ -411,7 +441,8 @@ export default function SignupPage() {
       );
 
       if (!authResult.user.emailVerified) {
-        await sendEmailVerification(authResult.user);
+        const freshIdToken = await authResult.user.getIdToken();
+        await sendCustomVerificationEmail(freshIdToken);
         await signOut(auth);
         clearUser();
 

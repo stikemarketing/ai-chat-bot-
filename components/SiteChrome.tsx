@@ -23,6 +23,9 @@ function PublicFooter() {
           <Link className="transition hover:text-black" href="/refunds-cancellation">
             Refunds And Cancellation
           </Link>
+          <Link className="transition hover:text-black" href="/anti-trafficking-policy">
+            Anti-Human Trafficking Policy
+          </Link>
         </nav>
       </div>
     </footer>

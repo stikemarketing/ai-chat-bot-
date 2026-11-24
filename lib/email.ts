@@ -26,6 +26,7 @@ export async function sendEmail(params: {
   to: string;
   subject: string;
   text: string;
+  html?: string;
   replyTo?: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
@@ -35,6 +36,7 @@ export async function sendEmail(params: {
       to: params.to,
       subject: params.subject,
       text: params.text,
+      ...(params.html ? { html: params.html } : {}),
       replyTo: params.replyTo,
     });
 
