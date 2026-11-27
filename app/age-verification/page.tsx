@@ -20,15 +20,14 @@ function AgeVerificationContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const source = searchParams.get("source") === "app" ? "app" : "web";
+  const requestedCharacter = searchParams.get("character");
+  const character =
+    requestedCharacter === "ivy" || requestedCharacter === "sienna" ? requestedCharacter : "luna";
+
   const destination = useMemo(() => {
-    const source = searchParams.get("source") === "app" ? "app" : "web";
-    const requestedCharacter = searchParams.get("character");
-    const character =
-      requestedCharacter === "ivy" || requestedCharacter === "sienna"
-        ? requestedCharacter
-        : "luna";
     return source === "app" ? `/app/chat/${character}` : `/chat/${character}`;
-  }, [searchParams]);
+  }, [source, character]);
 
   useEffect(() => {
     async function loadStatus() {
@@ -73,11 +72,25 @@ function AgeVerificationContent() {
       const token = await firebaseUser.getIdToken();
       const response = await fetch("/api/age-assurance/start", {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ source, character }),
       });
-      const data = (await response.json()) as { error?: string; redirectUrl?: string };
+      const data = (await response.json()) as {
+        error?: string;
+        redirectUrl?: string;
+        verified?: boolean;
+      };
       if (!response.ok) throw new Error(data.error || "Age Check Could Not Be Started.");
-      if (!data.redirectUrl) throw new Error("AgeChecked Did Not Return A Secure Link.");
+
+      if (data.verified) {
+        router.replace(destination);
+        return;
+      }
+
+      if (!data.redirectUrl) throw new Error("VerifyMyAge Did Not Return A Secure Link.");
       window.location.assign(data.redirectUrl);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Age Check Could Not Be Started.");
@@ -127,7 +140,7 @@ function AgeVerificationContent() {
         ) : null}
 
         <p className="mt-5 text-center text-xs leading-6 text-black/45">
-          Live Access Will Remain Locked Until The AgeChecked Merchant Connection Is Approved And Configured.
+          Live Access Will Remain Locked Until VerifyMyAge Confirms Your Age Check.
         </p>
       </section>
     </main>

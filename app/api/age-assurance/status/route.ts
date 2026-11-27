@@ -4,6 +4,7 @@ import {
   normalizeAdultVerificationStatus,
 } from "@/lib/ageAssurance";
 import { getAdminAuth, getAdminDb } from "@/lib/firebaseAdmin";
+import { isVerifyMyAgeConfigured } from "@/lib/verifymyage";
 
 export const runtime = "nodejs";
 
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
       status: normalizeAdultVerificationStatus(data.adultVerificationStatus),
       provider: data.adultVerificationProvider || null,
       enforced: isAgeAssuranceEnforced(),
-      providerConfigured: Boolean(process.env.AGECHECKED_API_KEY?.trim()),
+      providerConfigured: isVerifyMyAgeConfigured(),
     });
   } catch (error) {
     console.error("Age assurance status failed:", error);
